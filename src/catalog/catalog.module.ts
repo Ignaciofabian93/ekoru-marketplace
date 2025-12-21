@@ -1,9 +1,9 @@
 import { Module } from '@nestjs/common';
-import { CatalogService } from './catalog.service';
-import { CatalogResolver } from './catalog.resolver';
+import { MarketplaceCatalogService } from './catalog.service';
+import { MarketplaceCatalogResolver } from './catalog.resolver';
 
 @Module({
-  providers: [CatalogService, CatalogResolver],
-  exports: [CatalogService],
+  providers: [MarketplaceCatalogService, MarketplaceCatalogResolver],
+  exports: [MarketplaceCatalogService],
 })
-export class CatalogModule {}
+export class MarketplaceCatalogModule {}

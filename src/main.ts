@@ -6,7 +6,7 @@ import { AppModule } from './app.module';
 async function bootstrap() {
   const logger = new Logger('Bootstrap');
   const app = await NestFactory.create(AppModule, {
-    logger: ['log', 'error', 'warn', 'debug', 'verbose'],
+    logger: ['error', 'warn', 'log', 'debug'],
   });
   const configService = app.get(ConfigService);
 
@@ -28,11 +28,11 @@ async function bootstrap() {
   const port = configService.get<number>('PORT') || 4002;
   await app.listen(port);
 
-  logger.log(`Products subgraph is running on port ${port}`);
-  logger.log(`GraphQL Playground: http://localhost:${port}/graphql`);
+  logger.log(`Marketplace subgraph is running on port ${port}`);
 }
 
 bootstrap().catch((err) => {
-  console.error('Error starting the application:', err);
+  const logger = new Logger('Bootstrap');
+  logger.error('Error starting the application:', err);
   process.exit(1);
 });

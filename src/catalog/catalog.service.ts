@@ -6,12 +6,12 @@ import {
 } from '../common/exceptions/graphql.exceptions';
 
 @Injectable()
-export class CatalogService {
-  private readonly logger = new Logger(CatalogService.name);
+export class MarketplaceCatalogService {
+  private readonly logger = new Logger(MarketplaceCatalogService.name);
 
   constructor(private readonly prisma: PrismaService) {}
 
-  async getMarketCatalog() {
+  async getMarketplaceCatalog() {
     try {
       const departments = await this.prisma.department.findMany({
         select: {
@@ -45,46 +45,11 @@ export class CatalogService {
 
       return departments;
     } catch (error) {
-      this.logger.error('Error al obtener el catálogo del mercado:', error);
+      this.logger.error('Error al obtener el catálogo marketplace:', error);
       if (error instanceof NotFoundError) {
         throw error;
       }
-      throw new InternalServerError(
-        'Error al obtener el catálogo del mercado',
-      );
-    }
-  }
-
-  async getStoreCatalog() {
-    try {
-      const storeCatalog = await this.prisma.storeCategory.findMany({
-        select: {
-          id: true,
-          category: true,
-          href: true,
-          subcategories: {
-            select: {
-              id: true,
-              subCategory: true,
-            },
-          },
-        },
-        orderBy: {
-          category: 'asc',
-        },
-      });
-
-      if (!storeCatalog.length) {
-        throw new NotFoundError('No se encontraron categorías de tienda');
-      }
-
-      return storeCatalog;
-    } catch (error) {
-      this.logger.error('Error al obtener el catálogo de tiendas:', error);
-      if (error instanceof NotFoundError) {
-        throw error;
-      }
-      throw new InternalServerError('Error al obtener el catálogo de tiendas');
+      throw new InternalServerError('Error al obtener el catálogo marketplace');
     }
   }
 }
