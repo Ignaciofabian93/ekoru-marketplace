@@ -55,22 +55,28 @@ export class MarketplaceService {
       }
 
       const parsedId = Number(departmentId);
-      const departmentCategories = await this.prisma.departmentCategory.findMany({
-        where: {
-          departmentId: parsedId,
-        },
-        orderBy: {
-          departmentCategoryName: 'asc',
-        },
-      });
+      const departmentCategories =
+        await this.prisma.departmentCategory.findMany({
+          where: {
+            departmentId: parsedId,
+          },
+          orderBy: {
+            departmentCategoryName: 'asc',
+          },
+        });
 
       if (!departmentCategories) {
-        throw new NotFoundError('No se encontraron categorías de departamento.');
+        throw new NotFoundError(
+          'No se encontraron categorías de departamento.',
+        );
       }
 
       return departmentCategories;
     } catch (error) {
-      this.logger.error('Error al obtener las categorías de departamento:', error);
+      this.logger.error(
+        'Error al obtener las categorías de departamento:',
+        error,
+      );
       if (
         error instanceof NotFoundError ||
         error instanceof UnAuthorizedError
@@ -209,7 +215,12 @@ export class MarketplaceService {
 
       return {
         ...department,
-        products: createPaginatedResponse(products, page, pageSize, totalProductsCount),
+        products: createPaginatedResponse(
+          products,
+          page,
+          pageSize,
+          totalProductsCount,
+        ),
       };
     } catch (error) {
       this.logger.error('Error al obtener el departamento:', error);
@@ -233,44 +244,53 @@ export class MarketplaceService {
         where: { departmentId: parsedId },
       });
 
-      const departmentCategories = await this.prisma.departmentCategory.findMany({
-        where: { departmentId: parsedId },
-        select: {
-          id: true,
-          departmentCategoryName: true,
-          departmentId: true,
-          href: true,
-          productCategory: {
-            select: {
-              id: true,
-              productCategoryName: true,
-              departmentCategoryId: true,
-              keywords: true,
-              size: true,
-              averageWeight: true,
-              weightUnit: true,
-              href: true,
-              _count: {
-                select: {
-                  product: true,
+      const departmentCategories =
+        await this.prisma.departmentCategory.findMany({
+          where: { departmentId: parsedId },
+          select: {
+            id: true,
+            departmentCategoryName: true,
+            departmentId: true,
+            href: true,
+            productCategory: {
+              select: {
+                id: true,
+                productCategoryName: true,
+                departmentCategoryId: true,
+                keywords: true,
+                size: true,
+                averageWeight: true,
+                weightUnit: true,
+                href: true,
+                _count: {
+                  select: {
+                    product: true,
+                  },
                 },
               },
-            },
-            orderBy: {
-              productCategoryName: 'asc',
+              orderBy: {
+                productCategoryName: 'asc',
+              },
             },
           },
-        },
-        orderBy: {
-          departmentCategoryName: 'asc',
-        },
-        skip,
-        take,
-      });
+          orderBy: {
+            departmentCategoryName: 'asc',
+          },
+          skip,
+          take,
+        });
 
-      return createPaginatedResponse(departmentCategories, page, pageSize, totalCount);
+      return createPaginatedResponse(
+        departmentCategories,
+        page,
+        pageSize,
+        totalCount,
+      );
     } catch (error) {
-      this.logger.error('Error al obtener las categorías de departamento:', error);
+      this.logger.error(
+        'Error al obtener las categorías de departamento:',
+        error,
+      );
       throw new InternalServerError(
         'Error al obtener las categorías de departamento.',
       );
@@ -286,48 +306,49 @@ export class MarketplaceService {
       const parsedId = Number(id);
       const { skip, take } = calculatePrismaParams(page, pageSize);
 
-      const departmentCategory = await this.prisma.departmentCategory.findUnique({
-        where: { id: parsedId },
-        select: {
-          id: true,
-          departmentCategoryName: true,
-          departmentId: true,
-          href: true,
-          department: {
-            select: {
-              id: true,
-              departmentName: true,
-              departmentImage: true,
-              href: true,
-            },
-          },
-          productCategory: {
-            select: {
-              id: true,
-              productCategoryName: true,
-              departmentCategoryId: true,
-              keywords: true,
-              size: true,
-              averageWeight: true,
-              weightUnit: true,
-              href: true,
-              materials: {
-                include: {
-                  material: true,
-                },
-              },
-              _count: {
-                select: {
-                  product: true,
-                },
+      const departmentCategory =
+        await this.prisma.departmentCategory.findUnique({
+          where: { id: parsedId },
+          select: {
+            id: true,
+            departmentCategoryName: true,
+            departmentId: true,
+            href: true,
+            department: {
+              select: {
+                id: true,
+                departmentName: true,
+                departmentImage: true,
+                href: true,
               },
             },
-            orderBy: {
-              productCategoryName: 'asc',
+            productCategory: {
+              select: {
+                id: true,
+                productCategoryName: true,
+                departmentCategoryId: true,
+                keywords: true,
+                size: true,
+                averageWeight: true,
+                weightUnit: true,
+                href: true,
+                materials: {
+                  include: {
+                    material: true,
+                  },
+                },
+                _count: {
+                  select: {
+                    product: true,
+                  },
+                },
+              },
+              orderBy: {
+                productCategoryName: 'asc',
+              },
             },
           },
-        },
-      });
+        });
 
       if (!departmentCategory) {
         throw new NotFoundError('Categoría de departamento no encontrada.');
@@ -360,10 +381,18 @@ export class MarketplaceService {
 
       return {
         ...departmentCategory,
-        products: createPaginatedResponse(products, page, pageSize, totalProductsCount),
+        products: createPaginatedResponse(
+          products,
+          page,
+          pageSize,
+          totalProductsCount,
+        ),
       };
     } catch (error) {
-      this.logger.error('Error al obtener la categoría de departamento:', error);
+      this.logger.error(
+        'Error al obtener la categoría de departamento:',
+        error,
+      );
       if (error instanceof NotFoundError) {
         throw error;
       }
@@ -431,7 +460,12 @@ export class MarketplaceService {
         take,
       });
 
-      return createPaginatedResponse(productCategories, page, pageSize, totalCount);
+      return createPaginatedResponse(
+        productCategories,
+        page,
+        pageSize,
+        totalCount,
+      );
     } catch (error) {
       this.logger.error('Error al obtener las categorías de producto:', error);
       throw new InternalServerError(
@@ -527,7 +561,12 @@ export class MarketplaceService {
 
       return {
         ...productCategory,
-        products: createPaginatedResponse(products, page, pageSize, totalProductsCount),
+        products: createPaginatedResponse(
+          products,
+          page,
+          pageSize,
+          totalProductsCount,
+        ),
       };
     } catch (error) {
       this.logger.error('Error al obtener la categoría de producto:', error);

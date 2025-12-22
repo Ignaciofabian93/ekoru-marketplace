@@ -1,11 +1,11 @@
 services:
-  ekoru-products:
-    image: ekoru-products:prod
+  ekoru-marketplace:
+    image: ekoru-marketplace:prod
     build:
       context: .
       dockerfile: Dockerfile
     restart: always
-    container_name: ekoru-products
+    container_name: ekoru-marketplace
     env_file:
       - .env.prod
     ports:

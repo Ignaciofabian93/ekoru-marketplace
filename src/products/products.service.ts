@@ -272,56 +272,6 @@ export class ProductsService {
     }
   }
 
-  async searchProducts(
-    searchTerm: string,
-    page: number = 1,
-    pageSize: number = 20,
-    filter?: ProductFilterInput,
-    sort?: ProductSortInput,
-  ) {
-    try {
-      const { skip, take } = calculatePrismaParams(page, pageSize);
-      const where = this.buildProductWhereClause(filter);
-      const orderBy = this.buildProductOrderByClause(sort);
-
-      where.OR = [
-        {
-          name: {
-            contains: searchTerm,
-            mode: 'insensitive',
-          },
-        },
-        {
-          description: {
-            contains: searchTerm,
-            mode: 'insensitive',
-          },
-        },
-        {
-          brand: {
-            contains: searchTerm,
-            mode: 'insensitive',
-          },
-        },
-      ];
-
-      const totalCount = await this.prisma.product.count({ where });
-
-      const products = await this.prisma.product.findMany({
-        where,
-        orderBy,
-        skip,
-        take,
-        include: this.productInclude,
-      });
-
-      return createPaginatedResponse(products, page, pageSize, totalCount);
-    } catch (error) {
-      this.logger.error('Error al buscar productos:', error);
-      throw new InternalServerError('Error al buscar productos');
-    }
-  }
-
   async addProduct(input: AddProductInput, sellerId?: string) {
     try {
       if (!sellerId) {

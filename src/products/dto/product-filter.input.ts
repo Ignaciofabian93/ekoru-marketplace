@@ -1,5 +1,11 @@
 import { InputType, Field, Int } from '@nestjs/graphql';
-import { IsOptional, IsString, IsNumber, IsArray, IsBoolean } from 'class-validator';
+import {
+  IsOptional,
+  IsString,
+  IsNumber,
+  IsArray,
+  IsBoolean,
+} from 'class-validator';
 import { Badge, ProductCondition } from '../../graphql/enums';
 
 @InputType()

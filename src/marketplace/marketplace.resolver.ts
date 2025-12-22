@@ -37,7 +37,8 @@ export class MarketplaceResolver {
     name: 'getProductCategoriesByDepartmentCategoryId',
   })
   async getProductCategoriesByDepartmentCategoryId(
-    @Args('departmentCategoryId', { type: () => ID }) departmentCategoryId: string,
+    @Args('departmentCategoryId', { type: () => ID })
+    departmentCategoryId: string,
     @CurrentSeller() sellerId?: string,
   ) {
     return this.marketplaceService.getProductCategoriesByDepartmentCategoryId(
@@ -92,7 +93,8 @@ export class MarketplaceResolver {
     name: 'getProductCategories',
   })
   async getProductCategories(
-    @Args('departmentCategoryId', { type: () => ID }) departmentCategoryId: string,
+    @Args('departmentCategoryId', { type: () => ID })
+    departmentCategoryId: string,
     @Args('page', { type: () => Int, defaultValue: 1 }) page: number,
     @Args('pageSize', { type: () => Int, defaultValue: 10 }) pageSize: number,
   ) {
@@ -106,8 +108,10 @@ export class MarketplaceResolver {
   @Query(() => ProductCategory, { nullable: true, name: 'getProductCategory' })
   async getProductCategory(
     @Args('id', { type: () => ID }) id: string,
-    @Args('page', { type: () => Int, defaultValue: 1, nullable: true }) page?: number,
-    @Args('pageSize', { type: () => Int, defaultValue: 10, nullable: true }) pageSize?: number,
+    @Args('page', { type: () => Int, defaultValue: 1, nullable: true })
+    page?: number,
+    @Args('pageSize', { type: () => Int, defaultValue: 10, nullable: true })
+    pageSize?: number,
   ) {
     return this.marketplaceService.getProductCategory(
       Number(id),

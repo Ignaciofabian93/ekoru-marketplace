@@ -1,11 +1,11 @@
 services:
-  ekoru-products-qa:
-    image: ekoru-products:qa
+  ekoru-marketplace-qa:
+    image: ekoru-marketplace:qa
     build:
       context: .
       dockerfile: Dockerfile
     restart: always
-    container_name: ekoru-products-qa
+    container_name: ekoru-marketplace-qa
     env_file:
       - .env.qa
     ports:

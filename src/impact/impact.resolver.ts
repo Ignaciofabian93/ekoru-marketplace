@@ -1,6 +1,9 @@
 import { Resolver, Query, Args, ID } from '@nestjs/graphql';
 import { ImpactService } from './impact.service';
-import { MaterialImpactEstimate, EnvironmentalImpact } from '../catalog/entities';
+import {
+  MaterialImpactEstimate,
+  EnvironmentalImpact,
+} from '../catalog/entities';
 import { Co2ImpactMessage, WaterImpactMessage } from './entities';
 
 @Resolver()
@@ -29,6 +32,8 @@ export class ImpactResolver {
   async calculateProductImpact(
     @Args('productCategoryId', { type: () => ID }) productCategoryId: string,
   ) {
-    return this.impactService.calculateCategoryImpact(Number(productCategoryId));
+    return this.impactService.calculateCategoryImpact(
+      Number(productCategoryId),
+    );
   }
 }
