@@ -3,6 +3,7 @@ import { MaterialImpactEstimate } from './material-impact-estimate.entity';
 
 @ObjectType()
 @Directive('@key(fields: "id")')
+@Directive('@shareable')
 export class ProductCategoryMaterial {
   @Field(() => ID)
   id: number;

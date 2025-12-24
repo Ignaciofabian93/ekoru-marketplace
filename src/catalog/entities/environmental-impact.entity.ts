@@ -1,6 +1,7 @@
-import { ObjectType, Field, Float } from '@nestjs/graphql';
+import { ObjectType, Field, Float, Directive } from '@nestjs/graphql';
 
 @ObjectType()
+@Directive('@shareable')
 export class MaterialImpactBreakdown {
   @Field()
   materialType: string;
@@ -19,6 +20,7 @@ export class MaterialImpactBreakdown {
 }
 
 @ObjectType()
+@Directive('@shareable')
 export class EnvironmentalImpact {
   @Field(() => Float)
   totalCo2SavingsKG: number;

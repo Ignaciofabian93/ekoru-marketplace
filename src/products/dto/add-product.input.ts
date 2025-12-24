@@ -57,13 +57,26 @@ export class AddProductInput {
   @IsArray()
   badges?: Badge[];
 
-  @Field(() => Int)
+  @Field(() => Int, { nullable: true })
+  @IsOptional()
   @IsNumber()
-  productCategoryId: number;
+  productCategoryId?: number;
 
-  @Field()
+  @Field(() => String, { nullable: true })
+  @IsOptional()
   @IsString()
-  sellerId: string;
+  sellerId?: string;
+
+  @Field(() => Int, { nullable: true })
+  @IsOptional()
+  @IsNumber()
+  @Min(0)
+  stock?: number;
+
+  @Field(() => Int, { nullable: true })
+  @IsOptional()
+  @IsNumber()
+  subcategoryId?: number;
 
   @Field(() => ProductCondition, { nullable: true })
   @IsOptional()

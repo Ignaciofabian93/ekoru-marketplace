@@ -1,6 +1,7 @@
-import { ObjectType, Field, ID, Float } from '@nestjs/graphql';
+import { ObjectType, Field, ID, Float, Directive } from '@nestjs/graphql';
 
 @ObjectType()
+@Directive('@shareable')
 export class WaterImpactMessage {
   @Field(() => ID)
   id: number;
