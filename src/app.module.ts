@@ -12,6 +12,7 @@ import { MarketplaceModule } from './marketplace/marketplace.module';
 import { ProductsModule } from './products/products.module';
 import { ImpactModule } from './impact/impact.module';
 import { JSONScalar } from './graphql/scalars';
+import { HealthController } from './health/health.controller';
 import configuration from './config/configuration';
 
 // Import to register enums
@@ -57,5 +58,6 @@ import './graphql/enums';
     ImpactModule,
   ],
   providers: [JSONScalar],
+  controllers: [HealthController],
 })
 export class AppModule {}
