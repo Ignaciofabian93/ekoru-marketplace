@@ -21,6 +21,7 @@ export class MarketplaceCatalogService {
           departmentCategory: {
             select: {
               id: true,
+              departmentId: true,
               departmentCategoryName: true,
               href: true,
               productCategory: {
