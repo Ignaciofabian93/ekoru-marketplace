@@ -1,11 +1,28 @@
-import { Module, forwardRef } from '@nestjs/common';
+import { Module } from '@nestjs/common';
+import { PrismaModule } from '../prisma/prisma.module';
 import { ProductsService } from './products.service';
-import { ProductsResolver } from './products.resolver';
-import { ImpactModule } from '../impact/impact.module';
+import { ProductsResolver, SellerReferenceResolver } from './products.resolver';
+import { ImpactService } from '../services/impact.service';
+import { ImpactRepository } from '../repositories/impact.repository';
 
+/**
+ * Products Module
+ *
+ * This module handles all product-related functionality including:
+ * - Product CRUD operations
+ * - Product queries by seller, category, department
+ * - Product filtering and sorting
+ * - Exchangeable products
+ */
 @Module({
-  imports: [forwardRef(() => ImpactModule)],
-  providers: [ProductsService, ProductsResolver],
-  exports: [ProductsService],
+  imports: [PrismaModule],
+  providers: [
+    ProductsService,
+    ProductsResolver,
+    SellerReferenceResolver,
+    ImpactService,
+    ImpactRepository,
+  ],
+  exports: [ProductsService, ImpactService],
 })
 export class ProductsModule {}

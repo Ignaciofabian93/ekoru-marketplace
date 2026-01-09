@@ -415,49 +415,136 @@ model BusinessProfile {
 /// /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 /// /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 model Department {
-  id                 Int                  @id @default(autoincrement())
-  departmentName     String
-  departmentImage    String?
-  href               String?
+  id        Int     @id @default(autoincrement())
+  isActive  Boolean @default(true)
+  sortOrder Int     @default(0)
+
   departmentCategory DepartmentCategory[]
+  translations       DepartmentTranslation[]
+
+  @@index([id])
+  @@index([isActive, sortOrder])
+}
+
+model DepartmentTranslation {
+  id           Int      @id @default(autoincrement())
+  departmentId Int
+  language     Language // Enum: ES, EN, FR, PT, DE
+  name         String
+  slug         String // 'tecnologia', 'technology', 'technologie'
+  href         String?
+
+  metaTitle       String?
+  metaDescription String?  @db.Text
+  metaKeywords    String[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  department Department @relation(fields: [departmentId], references: [id], onDelete: Cascade)
+
+  @@unique([departmentId, language])
+  @@unique([slug, language])
+  @@index([slug, language])
+  @@index([language, departmentId])
 }
 
 model DepartmentCategory {
-  id                     Int               @id @default(autoincrement())
-  departmentId           Int
-  departmentCategoryName String
-  href                   String?
-  department             Department        @relation(fields: [departmentId], references: [id])
-  productCategory        ProductCategory[]
+  id           Int     @id @default(autoincrement())
+  departmentId Int
+  isActive     Boolean @default(true)
+  sortOrder    Int     @default(0)
+
+  department      Department                      @relation(fields: [departmentId], references: [id])
+  productCategory ProductCategory[]
+  translations    DepartmentCategoryTranslation[]
+
+  @@index([departmentId])
+  @@index([isActive, sortOrder])
+}
+
+model DepartmentCategoryTranslation {
+  id                   Int      @id @default(autoincrement())
+  departmentCategoryId Int
+  language             Language // Enum: ES, EN, FR, PT, DE
+  name                 String
+  slug                 String // 'tecnologia-portatil', 'portable-technology'
+  href                 String?
+
+  metaTitle       String?
+  metaDescription String?  @db.Text
+  metaKeywords    String[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  departmentCategory DepartmentCategory @relation(fields: [departmentCategoryId], references: [id], onDelete: Cascade)
+
+  @@unique([departmentCategoryId, language])
+  @@unique([slug, language])
+  @@index([slug, language])
+  @@index([language, departmentCategoryId])
 }
 
 model ProductCategory {
-  id                   Int                       @id @default(autoincrement())
+  id                   Int @id @default(autoincrement())
   departmentCategoryId Int
-  averageWeight        Float?                    @default(0.0)
-  keywords             String[]
-  productCategoryName  String
-  size                 ProductSize?              @default(M)
-  weightUnit           WeightUnit?               @default(KG)
-  href                 String?
-  product              Product[]
-  departmentCategory   DepartmentCategory        @relation(fields: [departmentCategoryId], references: [id])
-  materials            ProductCategoryMaterial[]
+
+  averageWeight Float?       @default(0.0)
+  size          ProductSize? @default(M)
+  weightUnit    WeightUnit?  @default(KG)
+
+  isActive  Boolean  @default(true)
+  sortOrder Int      @default(0)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt @default(now())
+
+  departmentCategory DepartmentCategory           @relation(fields: [departmentCategoryId], references: [id], onDelete: Cascade)
+  product            Product[]
+  materials          ProductCategoryMaterial[]
+  translations       ProductCategoryTranslation[]
 
   @@index([departmentCategoryId])
 }
 
+model ProductCategoryTranslation {
+  id                Int      @id @default(autoincrement())
+  productCategoryId Int
+  language          Language // Enum: ES, EN, FR, PT, DE
+  name              String
+  slug              String // 'laptops', 'portatiles'
+  keywords          String[]
+  href              String?
+
+  metaTitle       String?
+  metaDescription String? @db.Text
+
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  metaKeywords String[]
+
+  productCategory ProductCategory @relation(fields: [productCategoryId], references: [id], onDelete: Cascade)
+
+  @@unique([productCategoryId, language])
+  @@unique([slug, language])
+  @@index([slug, language])
+  @@index([language, productCategoryId])
+  @@index([language])
+}
+
 model ProductCategoryMaterial {
-  id                Int                    @id @default(autoincrement())
+  id                Int     @id @default(autoincrement())
   productCategoryId Int
   materialTypeId    Int
   quantity          Float
-  unit              String                 @default("percentage")
-  isPrimary         Boolean                @default(false)
-  createdAt         DateTime               @default(now())
-  updatedAt         DateTime               @updatedAt
-  material          MaterialImpactEstimate @relation(fields: [materialTypeId], references: [id])
-  productCategory   ProductCategory        @relation(fields: [productCategoryId], references: [id], onDelete: Cascade)
+  unit              String  @default("percentage")
+  isPrimary         Boolean @default(false)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  material        MaterialImpactEstimate @relation(fields: [materialTypeId], references: [id])
+  productCategory ProductCategory        @relation(fields: [productCategoryId], references: [id], onDelete: Cascade)
 
   @@unique([productCategoryId, materialTypeId])
   @@index([productCategoryId])
@@ -466,47 +553,47 @@ model ProductCategoryMaterial {
 }
 
 model Product {
-  id                                            Int              @id @default(autoincrement())
-  name                                          String
-  description                                   String
-  price                                         Int
-  hasOffer                                      Boolean          @default(false)
-  offerPrice                                    Int?             @default(0)
-  sellerId                                      String
-  badges                                        Badge[]
-  brand                                         String
-  color                                         String?
-  createdAt                                     DateTime         @default(now())
-  images                                        String[]
-  interests                                     String[]
-  isActive                                      Boolean          @default(true)
-  isExchangeable                                Boolean          @default(false)
-  productCategoryId                             Int
-  updatedAt                                     DateTime
-  condition                                     ProductCondition @default(NEW)
-  conditionDescription                          String?
-  deletedAt                                     DateTime?
-  viewCount                                     Int              @default(0)
-  advertisement                                 Advertisement[]
-  chat                                          Chat[]
-  exchange_Exchange_offeredProductIdToProduct   Exchange[]       @relation("Exchange_offeredProductIdToProduct")
-  exchange_Exchange_requestedProductIdToProduct Exchange[]       @relation("Exchange_requestedProductIdToProduct")
-  orderItem                                     OrderItem[]
-  productCategory                               ProductCategory  @relation(fields: [productCategoryId], references: [id])
-  seller                                        Seller           @relation(fields: [sellerId], references: [id])
+  id          Int      @id @default(autoincrement())
+  name        String
+  description String
+  color       String?
+  images      String[]
+  brand       String
 
-  @@index([createdAt])
-  @@index([isActive])
-  @@index([price])
-  @@index([productCategoryId])
-  @@index([sellerId])
+  price Int
+
+  productCategoryId Int
+  badges            Badge[]
+  interests         String[]
+
+  condition            ProductCondition @default(NEW)
+  conditionDescription String?
+  isActive             Boolean          @default(true)
+  isExchangeable       Boolean          @default(false)
+
+  sellerId String
+
+  viewCount Int       @default(0)
+  createdAt DateTime  @default(now())
+  updatedAt DateTime
+  deletedAt DateTime?
+
+  productCategory    ProductCategory @relation(fields: [productCategoryId], references: [id])
+  seller             Seller          @relation(fields: [sellerId], references: [id])
+  advertisements     Advertisement[]
+  chats              Chat[]
+  exchangesOffered   Exchange[]      @relation("Exchange_offeredProductIdToProduct")
+  exchangesRequested Exchange[]      @relation("Exchange_requestedProductIdToProduct")
+  orderItem          OrderItem[]
+
+  @@index([productCategoryId, isActive, createdAt(sort: Desc)])
   @@index([sellerId, isActive])
   @@index([isExchangeable, isActive])
-  @@index([productCategoryId, isActive])
-  @@index([createdAt(sort: Desc), isActive])
-  @@index([hasOffer, isActive])
+  @@index([createdAt(sort: Desc)])
+  @@index([price])
+  @@index([viewCount(sort: Desc)])
   @@index([deletedAt])
-  @@index([viewCount])
+  @@index([sellerId])
 }
 
 /// /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -878,17 +965,17 @@ model Transaction {
 }
 
 model Exchange {
-  id                                           Int            @id @default(autoincrement())
-  transactionId                                Int            @unique
-  offeredProductId                             Int
-  requestedProductId                           Int
-  status                                       ExchangeStatus @default(PENDING)
-  notes                                        String?
-  createdAt                                    DateTime       @default(now())
-  completedAt                                  DateTime?
-  product_Exchange_offeredProductIdToProduct   Product        @relation("Exchange_offeredProductIdToProduct", fields: [offeredProductId], references: [id])
-  product_Exchange_requestedProductIdToProduct Product        @relation("Exchange_requestedProductIdToProduct", fields: [requestedProductId], references: [id])
-  transaction                                  Transaction    @relation(fields: [transactionId], references: [id])
+  id                 Int            @id @default(autoincrement())
+  transactionId      Int            @unique
+  offeredProductId   Int
+  requestedProductId Int
+  status             ExchangeStatus @default(PENDING)
+  notes              String?
+  createdAt          DateTime       @default(now())
+  completedAt        DateTime?
+  offeredProduct     Product        @relation("Exchange_offeredProductIdToProduct", fields: [offeredProductId], references: [id])
+  requestedProduct   Product        @relation("Exchange_requestedProductIdToProduct", fields: [requestedProductId], references: [id])
+  transaction        Transaction    @relation(fields: [transactionId], references: [id])
 }
 
 model Payment {
@@ -1738,4 +1825,12 @@ enum WeightUnit {
   LB
   OZ
   G
+}
+
+enum Language {
+  ES
+  EN
+  FR
+  PT
+  DE
 }

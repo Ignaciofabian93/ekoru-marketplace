@@ -1,4 +1,5 @@
 import { registerEnumType } from '@nestjs/graphql';
+import { Language } from '@prisma/client';
 
 export enum Badge {
   POPULAR = 'POPULAR',
@@ -111,3 +112,12 @@ registerEnumType(StoreProductSortField, {
   name: 'StoreProductSortField',
   description: 'Store product sort field options',
 });
+
+// Register Language enum from Prisma
+registerEnumType(Language, {
+  name: 'Language',
+  description: 'Supported languages for multi-language content',
+});
+
+// Export Language for use in other files
+export { Language };
