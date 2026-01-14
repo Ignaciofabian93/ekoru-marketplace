@@ -10,6 +10,9 @@ export class ProductCategoryItemEntity {
 
   @Field(() => String)
   href: string;
+
+  @Field(() => String)
+  slug: string;
 }
 
 @ObjectType('DepartmentCategoryItem')
@@ -22,6 +25,9 @@ export class DepartmentCategoryItemEntity {
 
   @Field(() => String)
   href: string;
+
+  @Field(() => String)
+  slug: string;
 
   @Field(() => [ProductCategoryItemEntity])
   productCategories: ProductCategoryItemEntity[];
@@ -38,6 +44,9 @@ export class MarketplaceCatalogItemEntity {
 
   @Field(() => String, { description: 'Href of the department' })
   href: string;
+
+  @Field(() => String, { description: 'Slug of the department' })
+  slug: string;
 
   @Field(() => [DepartmentCategoryItemEntity], {
     description: 'Categories within this department',

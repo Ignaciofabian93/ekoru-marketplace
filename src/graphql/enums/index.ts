@@ -68,15 +68,6 @@ export enum ProductSortField {
   NAME = 'NAME',
 }
 
-export enum StoreProductSortField {
-  CREATED_AT = 'CREATED_AT',
-  PRICE = 'PRICE',
-  NAME = 'NAME',
-  RATING = 'RATING',
-  STOCK = 'STOCK',
-  SUSTAINABILITY_SCORE = 'SUSTAINABILITY_SCORE',
-}
-
 // Register enums with GraphQL
 registerEnumType(Badge, {
   name: 'Badge',
@@ -106,11 +97,6 @@ registerEnumType(SortOrder, {
 registerEnumType(ProductSortField, {
   name: 'ProductSortField',
   description: 'Product sort field options',
-});
-
-registerEnumType(StoreProductSortField, {
-  name: 'StoreProductSortField',
-  description: 'Store product sort field options',
 });
 
 // Register Language enum from Prisma

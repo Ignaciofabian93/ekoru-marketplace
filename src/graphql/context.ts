@@ -30,6 +30,9 @@ export function createGraphQLContext(
 ): GraphQLContext {
   // Resolve services and repositories from the NestJS DI container
   const prisma = moduleRef.get(PrismaService, { strict: false });
+  const catalogRepository = moduleRef.get(CatalogRepository, {
+    strict: false,
+  });
   const departmentRepository = moduleRef.get(DepartmentRepository, {
     strict: false,
   });
@@ -39,9 +42,7 @@ export function createGraphQLContext(
   const productCategoryRepository = moduleRef.get(ProductCategoryRepository, {
     strict: false,
   });
-  const catalogRepository = moduleRef.get(CatalogRepository, {
-    strict: false,
-  });
+
   const departmentService = moduleRef.get(DepartmentService, {
     strict: false,
   });

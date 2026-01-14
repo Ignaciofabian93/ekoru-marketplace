@@ -82,6 +82,7 @@ export class CatalogRepository {
             select: {
               id: true,
               name: true,
+              slug: true,
               href: true,
             },
           },
@@ -100,6 +101,7 @@ export class CatalogRepository {
                 select: {
                   id: true,
                   name: true,
+                  slug: true,
                   href: true,
                 },
               },
@@ -118,6 +120,7 @@ export class CatalogRepository {
                     select: {
                       id: true,
                       name: true,
+                      slug: true,
                       href: true,
                     },
                   },
@@ -132,14 +135,17 @@ export class CatalogRepository {
       return departments.map((dept) => ({
         id: dept.id,
         name: dept.translations[0]?.name || '',
+        slug: dept.translations[0]?.slug || '',
         href: dept.translations[0]?.href || '',
         categories: dept.departmentCategory.map((cat) => ({
           id: cat.id,
           name: cat.translations[0]?.name || '',
+          slug: cat.translations[0]?.slug || '',
           href: cat.translations[0]?.href || '',
           productCategories: cat.productCategory.map((prodCat) => ({
             id: prodCat.id,
             name: prodCat.translations[0]?.name || '',
+            slug: prodCat.translations[0]?.slug || '',
             href: prodCat.translations[0]?.href || '',
           })),
         })),
