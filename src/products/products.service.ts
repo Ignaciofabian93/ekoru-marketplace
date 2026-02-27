@@ -1,4 +1,10 @@
-import { Injectable, Logger, NotFoundException } from '@nestjs/common';
+import {
+  Injectable,
+  Logger,
+  NotFoundException,
+  UnauthorizedException,
+  ForbiddenException,
+} from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { Prisma } from '@prisma/client';
 import {
@@ -292,7 +298,7 @@ export class ProductsService {
    */
   async addProduct(input: AddProductInput, sellerId?: string) {
     if (!sellerId) {
-      throw new NotFoundException('Seller authentication required');
+      throw new UnauthorizedException('Seller authentication required');
     }
 
     const product = await this.prisma.product.create({
@@ -314,7 +320,7 @@ export class ProductsService {
    */
   async updateProduct(input: UpdateProductInput, sellerId?: string) {
     if (!sellerId) {
-      throw new NotFoundException('Seller authentication required');
+      throw new UnauthorizedException('Seller authentication required');
     }
 
     const product = await this.prisma.product.findUnique({
@@ -326,7 +332,7 @@ export class ProductsService {
     }
 
     if (product.sellerId !== sellerId) {
-      throw new NotFoundException(
+      throw new ForbiddenException(
         'You do not have permission to update this product',
       );
     }
@@ -377,7 +383,7 @@ export class ProductsService {
    */
   async toggleProductActive(id: number, sellerId?: string) {
     if (!sellerId) {
-      throw new NotFoundException('Seller authentication required');
+      throw new UnauthorizedException('Seller authentication required');
     }
 
     const product = await this.prisma.product.findUnique({
@@ -389,7 +395,7 @@ export class ProductsService {
     }
 
     if (product.sellerId !== sellerId) {
-      throw new NotFoundException(
+      throw new ForbiddenException(
         'You do not have permission to modify this product',
       );
     }
@@ -459,7 +465,7 @@ export class ProductsService {
       };
     }
 
-    const where: any = {
+    const where: Prisma.ProductWhereInput = {
       isActive: true,
       deletedAt: null,
     };
@@ -472,11 +478,11 @@ export class ProductsService {
     }
 
     if (filter.minPrice !== undefined) {
-      where.price = { ...where.price, gte: filter.minPrice };
+      where.price = { gte: filter.minPrice };
     }
 
     if (filter.maxPrice !== undefined) {
-      where.price = { ...where.price, lte: filter.maxPrice };
+      where.price = { lte: filter.maxPrice };
     }
 
     if (filter.condition) {

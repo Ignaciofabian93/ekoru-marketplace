@@ -1,8 +1,6 @@
 import { Logger, Injectable } from '@nestjs/common';
 import { Language } from '@prisma/client';
-import DataLoader from 'dataloader';
 import { PrismaService } from '../prisma/prisma.service';
-import type { DepartmentTranslation } from '../types/department';
 
 @Injectable()
 export class CatalogRepository {
@@ -11,59 +9,9 @@ export class CatalogRepository {
   constructor(private readonly prisma: PrismaService) {}
 
   /**
-   * Creates a DataLoader for department translations with composite key (id + language)
-   *
-   * @returns {DataLoader<string, DepartmentTranslation | null>} DataLoader instance
-   *
-   * @example
-   * const loader = createTranslationLoader();
-   * const translation = await loader.load('1:ES');
-   */
-  createTranslationLoader(): DataLoader<string, DepartmentTranslation | null> {
-    return new DataLoader<string, DepartmentTranslation | null>(
-      async (compositeKeys: readonly string[]) => {
-        try {
-          const keyPairs = compositeKeys.map((key) => {
-            const [idStr, language] = key.split(':');
-            return {
-              departmentId: parseInt(idStr, 10),
-              language: language as Language,
-            };
-          });
-
-          const translation = await this.prisma.departmentTranslation.findMany({
-            where: {
-              OR: keyPairs.map(({ departmentId, language }) => ({
-                departmentId,
-                language,
-              })),
-            },
-          });
-
-          const translationMap = new Map<string, DepartmentTranslation>();
-          translation.forEach((translation) => {
-            const key = `${translation.departmentId}:${translation.language}`;
-            translationMap.set(key, translation);
-          });
-          return compositeKeys.map((key) => translationMap.get(key) || null);
-        } catch (error) {
-          this.logger.error(
-            `Error loading department translations: ${error.message}`,
-            error.stack,
-          );
-          throw error;
-        }
-      },
-      {
-        cacheKeyFn: (key: string) => key,
-      },
-    );
-  }
-
-  /**
-   * Gets the complete marketplace catalog with translations
-   * Returns departments with their categories and product categories
-   * All filtered by the specified language
+   * Gets the complete marketplace catalog with translations.
+   * Returns departments with their categories and product categories,
+   * all filtered by the specified language.
    */
   async getMarketplaceCatalog(language: Language) {
     try {
@@ -94,7 +42,7 @@ export class CatalogRepository {
               sortOrder: 'asc',
             },
             include: {
-              translations: {
+              departmentCategoryTranslation: {
                 where: {
                   language: language,
                 },
@@ -113,7 +61,7 @@ export class CatalogRepository {
                   sortOrder: 'asc',
                 },
                 include: {
-                  translations: {
+                  productCategoryTranslation: {
                     where: {
                       language: language,
                     },
@@ -131,7 +79,6 @@ export class CatalogRepository {
         },
       });
 
-      // Transform to a cleaner structure for the menu
       return departments.map((dept) => ({
         id: dept.id,
         name: dept.translations[0]?.name || '',
@@ -139,14 +86,14 @@ export class CatalogRepository {
         href: dept.translations[0]?.href || '',
         categories: dept.departmentCategory.map((cat) => ({
           id: cat.id,
-          name: cat.translations[0]?.name || '',
-          slug: cat.translations[0]?.slug || '',
-          href: cat.translations[0]?.href || '',
+          name: cat.departmentCategoryTranslation[0]?.name || '',
+          slug: cat.departmentCategoryTranslation[0]?.slug || '',
+          href: cat.departmentCategoryTranslation[0]?.href || '',
           productCategories: cat.productCategory.map((prodCat) => ({
             id: prodCat.id,
-            name: prodCat.translations[0]?.name || '',
-            slug: prodCat.translations[0]?.slug || '',
-            href: prodCat.translations[0]?.href || '',
+            name: prodCat.productCategoryTranslation[0]?.name || '',
+            slug: prodCat.productCategoryTranslation[0]?.slug || '',
+            href: prodCat.productCategoryTranslation[0]?.href || '',
           })),
         })),
       }));

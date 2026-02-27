@@ -4,6 +4,10 @@ export type Department = {
   id: number;
   isActive: boolean;
   sortOrder: number;
+  featuredFrom: Date | null;
+  featuredUntil: Date | null;
+  createdAt: Date;
+  updatedAt: Date;
 };
 
 export type DepartmentTranslation = {

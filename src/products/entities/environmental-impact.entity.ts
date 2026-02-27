@@ -1,4 +1,4 @@
-import { ObjectType, Field, Float } from '@nestjs/graphql';
+import { ObjectType, Field, Float, Directive } from '@nestjs/graphql';
 
 /**
  * GraphQL EnvironmentalImpact Entity
@@ -7,6 +7,7 @@ import { ObjectType, Field, Float } from '@nestjs/graphql';
  * Aggregates CO2 and water savings based on material composition.
  */
 @ObjectType('EnvironmentalImpact')
+@Directive('@shareable')
 export class EnvironmentalImpactEntity {
   @Field(() => Float, {
     description: 'Total estimated CO2 savings in kilograms',
@@ -28,6 +29,7 @@ export class EnvironmentalImpactEntity {
  * Material-level breakdown of environmental impact
  */
 @ObjectType('MaterialBreakdown')
+@Directive('@shareable')
 export class MaterialBreakdown {
   @Field(() => String, { description: 'Material type name' })
   materialType: string;

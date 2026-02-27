@@ -1,8 +1,8 @@
 import { Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { Language } from '@prisma/client';
-import { I18nService } from 'src/common/i18n';
-import { ProductCategoryRepository } from 'src/repositories';
-import { ProductCategory } from 'src/types/product-category';
+import { I18nService } from '../common/i18n';
+import { ProductCategoryRepository } from '../repositories';
+import { ProductCategory } from '../types/product-category';
 
 @Injectable()
 export class ProductCategoryService {
@@ -28,7 +28,7 @@ export class ProductCategoryService {
     slug: string,
     language?: Language,
   ): Promise<ProductCategory> {
-    const lang = language || this.i18nService.getCurrentLanguage();
+    const lang = language ?? this.i18nService.getDefaultLanguage();
 
     this.logger.debug(
       `Getting product category by slug: ${slug}, language: ${lang}`,
@@ -64,7 +64,7 @@ export class ProductCategoryService {
     offset: number,
     language?: Language,
   ): Promise<ProductCategory[]> {
-    const lang = language || this.i18nService.getCurrentLanguage();
+    const lang = language ?? this.i18nService.getDefaultLanguage();
 
     this.logger.debug(
       `Getting product categories: limit=${limit}, offset=${offset}, language=${lang}`,

@@ -18,7 +18,7 @@ import {
   ProductCategoryTranslationEntity,
 } from '../catalog-v2/entities';
 import { Language } from '@prisma/client';
-import { ProductCategoryService } from 'src/services/product-category.service';
+import { ProductCategoryService } from '../services/product-category.service';
 
 /**
  * Product Category GraphQL Resolver
@@ -54,8 +54,8 @@ export class ProductCategoryResolver {
   ): Promise<ProductCategory> {
     this.logger.debug(`Query: getProductCategoryBySlug(${slug}, ${language})`);
 
-    // Set language in context for this request
-    context.i18nService.setCurrentLanguage(language);
+    // Override context language so field resolvers use the same language the client requested.
+    context.language = language;
 
     return this.productCategoryService.getProductCategoryBySlug(slug, language);
   }
@@ -83,8 +83,8 @@ export class ProductCategoryResolver {
       `Query: getProductCategories(limit: ${limit}, offset: ${offset}, language: ${language})`,
     );
 
-    // Set language in context for this request
-    context.i18nService.setCurrentLanguage(language);
+    // Override context language so field resolvers use the same language the client requested.
+    context.language = language;
 
     const productCategories =
       await this.productCategoryService.getProductCategories(

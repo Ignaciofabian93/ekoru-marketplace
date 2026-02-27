@@ -10,8 +10,8 @@ import { ProductCategoryRepository } from '../repositories/product-category.repo
 // Services
 import { CatalogService } from '../services/catalog.service';
 import { DepartmentService } from '../services/department.service';
-import { CategoryService } from 'src/services/category.service';
-import { ProductCategoryService } from 'src/services/product-category.service';
+import { CategoryService } from '../services/category.service';
+import { ProductCategoryService } from '../services/product-category.service';
 import { I18nService } from '../common/i18n';
 
 // Resolvers

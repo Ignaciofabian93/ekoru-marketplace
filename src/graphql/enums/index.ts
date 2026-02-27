@@ -1,62 +1,13 @@
 import { registerEnumType } from '@nestjs/graphql';
-import { Language } from '@prisma/client';
+import {
+  Language,
+  Badge,
+  ProductCondition,
+  ProductSize,
+  WeightUnit,
+} from '@prisma/client';
 
-export enum Badge {
-  POPULAR = 'POPULAR',
-  DISCOUNTED = 'DISCOUNTED',
-  WOMAN_OWNED = 'WOMAN_OWNED',
-  BEST_SELLER = 'BEST_SELLER',
-  TOP_RATED = 'TOP_RATED',
-  COMMUNITY_FAVORITE = 'COMMUNITY_FAVORITE',
-  LIMITED_TIME_OFFER = 'LIMITED_TIME_OFFER',
-  FLASH_SALE = 'FLASH_SALE',
-  BEST_VALUE = 'BEST_VALUE',
-  HANDMADE = 'HANDMADE',
-  SUSTAINABLE = 'SUSTAINABLE',
-  SUPPORTS_CAUSE = 'SUPPORTS_CAUSE',
-  FAMILY_BUSINESS = 'FAMILY_BUSINESS',
-  CHARITY_SUPPORT = 'CHARITY_SUPPORT',
-  LIMITED_STOCK = 'LIMITED_STOCK',
-  SEASONAL = 'SEASONAL',
-  FREE_SHIPPING = 'FREE_SHIPPING',
-  FOR_REPAIR = 'FOR_REPAIR',
-  REFURBISHED = 'REFURBISHED',
-  EXCHANGEABLE = 'EXCHANGEABLE',
-  LAST_PRICE = 'LAST_PRICE',
-  FOR_GIFT = 'FOR_GIFT',
-  OPEN_TO_OFFERS = 'OPEN_TO_OFFERS',
-  OPEN_BOX = 'OPEN_BOX',
-  CRUELTY_FREE = 'CRUELTY_FREE',
-  DELIVERED_TO_HOME = 'DELIVERED_TO_HOME',
-  IN_HOUSE_PICKUP = 'IN_HOUSE_PICKUP',
-  IN_MID_POINT_PICKUP = 'IN_MID_POINT_PICKUP',
-}
-
-export enum ProductCondition {
-  NEW = 'NEW',
-  OPEN_BOX = 'OPEN_BOX',
-  LIKE_NEW = 'LIKE_NEW',
-  FAIR = 'FAIR',
-  POOR = 'POOR',
-  FOR_PARTS = 'FOR_PARTS',
-  REFURBISHED = 'REFURBISHED',
-}
-
-export enum ProductSize {
-  XS = 'XS',
-  S = 'S',
-  M = 'M',
-  L = 'L',
-  XL = 'XL',
-}
-
-export enum WeightUnit {
-  KG = 'KG',
-  LB = 'LB',
-  OZ = 'OZ',
-  G = 'G',
-}
-
+// Local enums not present in Prisma schema
 export enum SortOrder {
   ASC = 'ASC',
   DESC = 'DESC',
@@ -68,25 +19,34 @@ export enum ProductSortField {
   NAME = 'NAME',
 }
 
-// Register enums with GraphQL
+/**
+ * Single source of truth for all enum registrations.
+ * All enums are imported from @prisma/client to ensure the exact same
+ * enum objects are registered and used in @Field() decorators.
+ */
+registerEnumType(Language, {
+  name: 'Language',
+  description: 'Supported languages for multi-language content',
+});
+
 registerEnumType(Badge, {
   name: 'Badge',
-  description: 'Product badge types',
+  description: 'Product badge types for special designations',
 });
 
 registerEnumType(ProductCondition, {
   name: 'ProductCondition',
-  description: 'Product condition types',
+  description: 'Condition of the product',
 });
 
 registerEnumType(ProductSize, {
   name: 'ProductSize',
-  description: 'Product size types',
+  description: 'Product size categories',
 });
 
 registerEnumType(WeightUnit, {
   name: 'WeightUnit',
-  description: 'Weight unit types',
+  description: 'Weight measurement units',
 });
 
 registerEnumType(SortOrder, {
@@ -99,11 +59,4 @@ registerEnumType(ProductSortField, {
   description: 'Product sort field options',
 });
 
-// Register Language enum from Prisma
-registerEnumType(Language, {
-  name: 'Language',
-  description: 'Supported languages for multi-language content',
-});
-
-// Export Language for use in other files
-export { Language };
+export { Language, Badge, ProductCondition, ProductSize, WeightUnit };

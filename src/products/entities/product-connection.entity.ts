@@ -1,4 +1,4 @@
-import { ObjectType, Field } from '@nestjs/graphql';
+import { ObjectType, Field, Directive } from '@nestjs/graphql';
 import { ProductEntity } from './product.entity';
 import { PageInfoEntity } from './page-info.entity';
 
@@ -9,6 +9,7 @@ import { PageInfoEntity } from './page-info.entity';
  * Used for all queries that return multiple products with pagination.
  */
 @ObjectType('ProductConnection')
+@Directive('@shareable')
 export class ProductConnectionEntity {
   @Field(() => [ProductEntity], {
     description: 'List of products',

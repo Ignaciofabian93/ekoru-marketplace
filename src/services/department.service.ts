@@ -33,7 +33,7 @@ export class DepartmentService {
     slug: string,
     language?: Language,
   ): Promise<Department> {
-    const lang = language || this.i18nService.getCurrentLanguage();
+    const lang = language ?? this.i18nService.getDefaultLanguage();
 
     this.logger.debug(`Getting department by slug: ${slug}, language: ${lang}`);
 
@@ -64,7 +64,7 @@ export class DepartmentService {
     offset: number = 0,
     language?: Language,
   ): Promise<Department[]> {
-    const lang = language || this.i18nService.getCurrentLanguage();
+    const lang = language ?? this.i18nService.getDefaultLanguage();
 
     this.logger.debug(
       `Getting departments: limit=${limit}, offset=${offset}, language=${lang}`,
@@ -86,23 +86,4 @@ export class DepartmentService {
     return departments;
   }
 
-  /**
-   * Gets a department by ID
-   *
-   * @param {number} id - The department ID
-   * @returns {Promise<Department>} The department
-   * @throws {NotFoundException} If department is not found
-   */
-  async getDepartmentById(id: number): Promise<Department> {
-    this.logger.debug(`Getting department by ID: ${id}`);
-
-    const loader = this.departmentRepository.createDepartmentLoader();
-    const department = await loader.load(id);
-
-    if (!department) {
-      throw new NotFoundException(`Department with ID '${id}' not found`);
-    }
-
-    return department;
-  }
 }

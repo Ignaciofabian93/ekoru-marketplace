@@ -1,25 +1,7 @@
-import {
-  ObjectType,
-  Field,
-  Int,
-  ID,
-  Directive,
-  registerEnumType,
-} from '@nestjs/graphql';
+import { ObjectType, Field, Int, ID, Directive } from '@nestjs/graphql';
 import { Badge, ProductCondition } from '@prisma/client';
 import { ProductCategoryEntity } from '../../catalog-v2/entities/product-category.entity';
 import { EnvironmentalImpactEntity } from './environmental-impact.entity';
-
-// Register Prisma enums for GraphQL
-registerEnumType(Badge, {
-  name: 'Badge',
-  description: 'Product badge types for special designations',
-});
-
-registerEnumType(ProductCondition, {
-  name: 'ProductCondition',
-  description: 'Condition of the product',
-});
 
 /**
  * GraphQL Seller Entity Reference

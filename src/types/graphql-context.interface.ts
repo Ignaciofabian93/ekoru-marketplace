@@ -15,24 +15,28 @@ import { DepartmentRepository } from '../repositories/department.repository';
 import { CategoryRepository } from '../repositories/category.repository';
 import { ProductCategoryRepository } from '../repositories/product-category.repository';
 import { DepartmentService } from '../services/department.service';
-import { I18nService } from '../common/i18n';
 
 /**
  * GraphQL Context Interface
  *
- * This interface defines the context object that is available to all resolvers.
- * The context is created per request and includes:
- * - DataLoaders for batch loading and caching
- * - Service instances
- * - Repository instances
- * - Request metadata (language, user, etc.)
+ * Per-request context available to all resolvers. Language is resolved once
+ * from the Accept-Language header at context creation. Resolvers can override
+ * context.language when the client supplies an explicit language argument so
+ * that downstream field resolvers use a consistent language for the whole request.
+ *
+ * DataLoaders are created fresh per request to prevent stale cache across requests.
  */
 export interface GraphQLContext {
   // Express Request/Response
   req: Request;
   res: Response;
 
-  // Current language for this request
+  /**
+   * Active language for this request.
+   * Set from the Accept-Language header at context creation.
+   * Resolvers may override this when the client passes an explicit language arg,
+   * ensuring field resolvers below them use the same language.
+   */
   language: Language;
 
   // Prisma Client
@@ -40,14 +44,13 @@ export interface GraphQLContext {
 
   // Services
   departmentService: DepartmentService;
-  i18nService: I18nService;
 
-  // Repositories
+  // Repositories (also expose DataLoader helpers)
   departmentRepository: DepartmentRepository;
   categoryRepository: CategoryRepository;
   productCategoryRepository: ProductCategoryRepository;
 
-  // DataLoaders - Fresh per request to prevent stale data
+  // DataLoaders - fresh per request
   loaders: {
     // Department loaders
     departmentTranslation: DataLoader<string, DepartmentTranslation | null>;

@@ -7,32 +7,20 @@ import { ProductCategoryRepository } from '../repositories/product-category.repo
 import { DepartmentService } from '../services/department.service';
 import { I18nService } from '../common/i18n';
 import { GraphQLContext } from '../types';
-import { CatalogRepository } from 'src/repositories/catalog.repository';
 
 /**
  * GraphQL Context Factory
  *
- * This factory function creates a fresh GraphQL context for each request.
- * It initializes DataLoaders, services, and extracts metadata from the request.
- *
- * CRITICAL: DataLoaders MUST be created fresh per request to prevent stale cache
- * and ensure data consistency across requests.
- *
- * @param {Request} req - Express request object
- * @param {Response} res - Express response object
- * @param {ModuleRef} moduleRef - NestJS module reference for dependency injection
- * @returns {GraphQLContext} The context object for this request
+ * Creates a fresh context object for each request. Language is resolved once
+ * from the Accept-Language header and stored in context.language. DataLoaders
+ * are created fresh per request to prevent stale cache across requests.
  */
 export function createGraphQLContext(
   req: Request,
   res: Response,
   moduleRef: ModuleRef,
 ): GraphQLContext {
-  // Resolve services and repositories from the NestJS DI container
   const prisma = moduleRef.get(PrismaService, { strict: false });
-  const catalogRepository = moduleRef.get(CatalogRepository, {
-    strict: false,
-  });
   const departmentRepository = moduleRef.get(DepartmentRepository, {
     strict: false,
   });
@@ -42,32 +30,25 @@ export function createGraphQLContext(
   const productCategoryRepository = moduleRef.get(ProductCategoryRepository, {
     strict: false,
   });
-
   const departmentService = moduleRef.get(DepartmentService, {
     strict: false,
   });
+
+  // Parse Accept-Language header once per request
   const i18nService = moduleRef.get(I18nService, { strict: false });
+  const language = i18nService.parseAcceptLanguage(
+    req.headers['accept-language'],
+  );
 
-  // Extract language from Accept-Language header
-  const acceptLanguage = req.headers['accept-language'];
-  const language = i18nService.parseAcceptLanguage(acceptLanguage);
-
-  // Extract seller ID and token from headers
   const sellerId = req.headers['x-seller-id'] as string | undefined;
   const token = req.headers.authorization?.replace('Bearer ', '');
 
-  // Create fresh DataLoaders for this request
+  // DataLoaders MUST be fresh per request to prevent stale cache
   const loaders = {
-    marketplaceCatalog: catalogRepository.createTranslationLoader(),
-    // Department loaders
     departmentTranslation: departmentRepository.createTranslationLoader(),
     departmentById: departmentRepository.createDepartmentLoader(),
-
-    // Department Category loaders
     departmentCategoryTranslation: categoryRepository.createTranslationLoader(),
     departmentCategories: categoryRepository.createCategoryByDepartmentLoader(),
-
-    // Product Category loaders
     productCategoryTranslation:
       productCategoryRepository.createTranslationLoader(),
     productCategoriesByCategory:
@@ -80,7 +61,6 @@ export function createGraphQLContext(
     language,
     prisma,
     departmentService,
-    i18nService,
     departmentRepository,
     categoryRepository,
     productCategoryRepository,
@@ -91,10 +71,7 @@ export function createGraphQLContext(
 }
 
 /**
- * Context factory wrapper for use in GraphQLModule configuration
- *
- * This function returns a context factory that can be used in the GraphQL module
- * configuration. It provides access to the NestJS ModuleRef for dependency injection.
+ * Context factory wrapper for GraphQLModule configuration.
  *
  * @example
  * GraphQLModule.forRoot({

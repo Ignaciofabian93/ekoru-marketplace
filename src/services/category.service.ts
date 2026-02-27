@@ -1,8 +1,8 @@
 import { Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { Language } from '@prisma/client';
-import { I18nService } from 'src/common/i18n';
-import { CategoryRepository } from 'src/repositories';
-import { DepartmentCategory } from 'src/types/category';
+import { I18nService } from '../common/i18n';
+import { CategoryRepository } from '../repositories';
+import { DepartmentCategory } from '../types/category';
 
 @Injectable()
 export class CategoryService {
@@ -28,7 +28,7 @@ export class CategoryService {
     slug: string,
     language: Language,
   ): Promise<DepartmentCategory> {
-    const lang = language || this.i18nService.getCurrentLanguage();
+    const lang = language ?? this.i18nService.getDefaultLanguage();
 
     this.logger.debug(
       `Getting department category by slug: ${slug}, language: ${lang}`,
@@ -61,7 +61,7 @@ export class CategoryService {
     offset: number = 0,
     language?: Language,
   ): Promise<DepartmentCategory[]> {
-    const lang = language || this.i18nService.getCurrentLanguage();
+    const lang = language ?? this.i18nService.getDefaultLanguage();
 
     this.logger.debug(
       `Getting department categories: limit=${limit}, offset=${offset}, language=${lang}`,
@@ -71,10 +71,6 @@ export class CategoryService {
       throw new Error(
         'Invalid pagination parameters: limit must be > 0 and offset must be >= 0',
       );
-    }
-
-    if (offset < 0) {
-      throw new Error('Offset must be non-negative');
     }
 
     const categories = await this.categoryRepository.findAll(limit, offset);

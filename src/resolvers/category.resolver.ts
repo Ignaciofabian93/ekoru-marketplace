@@ -19,7 +19,7 @@ import {
   DepartmentCategoryTranslationEntity,
   ProductCategoryEntity,
 } from '../catalog-v2/entities';
-import { CategoryService } from 'src/services/category.service';
+import { CategoryService } from '../services/category.service';
 import { Language } from '@prisma/client';
 
 /**
@@ -55,8 +55,8 @@ export class CategoryResolver {
       `Query: getDepartmentCategoryBySlug(${slug}, ${language})`,
     );
 
-    // Set language in context for this request
-    context.i18nService.setCurrentLanguage(language);
+    // Override context language so field resolvers use the same language the client requested.
+    context.language = language;
 
     return this.categoryService.getDepartmentCategoryBySlug(slug, language);
   }
@@ -84,8 +84,8 @@ export class CategoryResolver {
       `Query: getDepartmentCategories(limit: ${limit}, offset: ${offset}, language: ${language})`,
     );
 
-    // Set language in context for this request
-    context.i18nService.setCurrentLanguage(language);
+    // Override context language so field resolvers use the same language the client requested.
+    context.language = language;
 
     const categories = await this.categoryService.getDepartmentCategories(
       limit,

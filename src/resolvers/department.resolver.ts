@@ -2,6 +2,7 @@ import {
   Resolver,
   Query,
   ResolveField,
+  ResolveReference,
   Parent,
   Args,
   Context,
@@ -51,8 +52,9 @@ export class DepartmentResolver {
   ): Promise<Department> {
     this.logger.debug(`Query: getDepartmentBySlug(${slug}, ${language})`);
 
-    // Set language in context for this request
-    context.i18nService.setCurrentLanguage(language);
+    // Override context language so field resolvers (translation, departmentCategory)
+    // use the same language the client explicitly requested.
+    context.language = language;
 
     return this.departmentService.getDepartmentBySlug(slug, language);
   }
@@ -80,8 +82,9 @@ export class DepartmentResolver {
       `Query: getDepartments(limit: ${limit}, offset: ${offset}, language: ${language})`,
     );
 
-    // Set language in context for this request
-    context.i18nService.setCurrentLanguage(language);
+    // Override context language so field resolvers (translation, departmentCategory)
+    // use the same language the client explicitly requested.
+    context.language = language;
 
     const departments = await this.departmentService.getDepartments(
       limit,
@@ -158,5 +161,18 @@ export class DepartmentResolver {
     }
 
     return categories;
+  }
+
+  /**
+   * Reference resolver for Apollo Federation.
+   * Allows other subgraphs to resolve a Department by ID.
+   */
+  @ResolveReference()
+  async resolveReference(
+    reference: { __typename: string; id: number },
+    @Context() context: GraphQLContext,
+  ): Promise<Department | null> {
+    this.logger.debug(`ResolveReference: Department(id: ${reference.id})`);
+    return context.loaders.departmentById.load(reference.id);
   }
 }
