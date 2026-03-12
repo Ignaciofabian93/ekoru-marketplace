@@ -1,5 +1,5 @@
 import { Injectable, Logger } from '@nestjs/common';
-import { Language } from '@prisma/client';
+import { Language } from '../graphql/enums';
 import { I18nService } from '../common/i18n';
 import { CatalogRepository } from '../repositories/catalog.repository';
 import type { MarketplaceCatalog } from '../types/catalog';

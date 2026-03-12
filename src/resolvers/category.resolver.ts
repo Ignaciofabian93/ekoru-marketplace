@@ -20,7 +20,7 @@ import {
   ProductCategoryEntity,
 } from '../catalog-v2/entities';
 import { CategoryService } from '../services/category.service';
-import { Language } from '@prisma/client';
+import { Language } from '../graphql/enums';
 
 /**
  * Department Category GraphQL Resolver

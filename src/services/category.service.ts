@@ -1,5 +1,5 @@
 import { Injectable, Logger, NotFoundException } from '@nestjs/common';
-import { Language } from '@prisma/client';
+import { Language } from '../graphql/enums';
 import { I18nService } from '../common/i18n';
 import { CategoryRepository } from '../repositories';
 import { DepartmentCategory } from '../types/category';
@@ -38,7 +38,7 @@ export class CategoryService {
 
     if (!category) {
       throw new NotFoundException(
-        `Department category with slug '${slug}' not found for language '${lang}'`,
+        this.i18nService.translate('errors.category_not_found', lang, { slug }),
       );
     }
 
@@ -69,7 +69,7 @@ export class CategoryService {
 
     if (limit <= 0 || offset < 0) {
       throw new Error(
-        'Invalid pagination parameters: limit must be > 0 and offset must be >= 0',
+        this.i18nService.translate('errors.invalid_pagination', lang),
       );
     }
 

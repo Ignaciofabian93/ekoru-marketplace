@@ -41,7 +41,9 @@ export class DepartmentService {
 
     if (!department) {
       throw new NotFoundException(
-        `Department with slug '${slug}' not found for language '${lang}'`,
+        this.i18nService.translate('errors.department_not_found', lang, {
+          slug,
+        }),
       );
     }
 
@@ -70,13 +72,19 @@ export class DepartmentService {
       `Getting departments: limit=${limit}, offset=${offset}, language=${lang}`,
     );
 
-    // Validate pagination parameters
     if (limit < 1 || limit > 100) {
-      throw new Error('Limit must be between 1 and 100');
+      throw new Error(
+        this.i18nService.translate('errors.limit_out_of_range', lang, {
+          min: '1',
+          max: '100',
+        }),
+      );
     }
 
     if (offset < 0) {
-      throw new Error('Offset must be non-negative');
+      throw new Error(
+        this.i18nService.translate('errors.offset_negative', lang),
+      );
     }
 
     const departments = await this.departmentRepository.findAll(limit, offset);
@@ -85,5 +93,4 @@ export class DepartmentService {
 
     return departments;
   }
-
 }

@@ -1,5 +1,5 @@
 import { ObjectType, Field, Int } from '@nestjs/graphql';
-import { Language } from '@prisma/client';
+import { Language } from '../../graphql/enums';
 
 /**
  * GraphQL DepartmentCategoryTranslation Entity

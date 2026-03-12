@@ -1,5 +1,5 @@
 import { Injectable, Logger, NotFoundException } from '@nestjs/common';
-import { Language } from '@prisma/client';
+import { Language } from '../graphql/enums';
 import { I18nService } from '../common/i18n';
 import { ProductCategoryRepository } from '../repositories';
 import { ProductCategory } from '../types/product-category';

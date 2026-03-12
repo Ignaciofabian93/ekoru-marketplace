@@ -1,6 +1,6 @@
 import { Resolver, Query, Args, ResolveReference } from '@nestjs/graphql';
 import { Logger } from '@nestjs/common';
-import { Language } from '@prisma/client';
+import { Language } from '../graphql/enums';
 import { CatalogService } from '../services/catalog.service';
 import { MarketplaceCatalogItemEntity } from '../catalog-v2/entities';
 import type { MarketplaceCatalog } from '../types/catalog';
@@ -57,9 +57,10 @@ export class CatalogResolver {
    * Allows other subgraphs to resolve a MarketplaceCatalogItem by ID.
    */
   @ResolveReference()
-  async resolveReference(
-    reference: { __typename: string; id: number },
-  ): Promise<MarketplaceCatalogItemEntity | null> {
+  async resolveReference(reference: {
+    __typename: string;
+    id: number;
+  }): Promise<MarketplaceCatalogItemEntity | null> {
     this.logger.debug(
       `ResolveReference: MarketplaceCatalogItem(id: ${reference.id})`,
     );

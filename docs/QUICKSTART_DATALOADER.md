@@ -239,7 +239,7 @@ If you need to use the services in other NestJS modules:
 ```typescript
 import { Injectable } from '@nestjs/common';
 import { DepartmentService } from './services/department.service';
-import { Language } from '@prisma/client';
+import { Language } from '../src/graphql/enums';
 
 @Injectable()
 export class MyCustomService {
@@ -262,7 +262,7 @@ For custom data loading logic:
 ```typescript
 import { Injectable } from '@nestjs/common';
 import { DepartmentRepository } from './repositories/department.repository';
-import { Language } from '@prisma/client';
+import { Language } from '../src/graphql/enums';
 
 @Injectable()
 export class MyAdvancedService {

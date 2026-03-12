@@ -17,7 +17,7 @@ import {
   ProductCategoryEntity,
   ProductCategoryTranslationEntity,
 } from '../catalog-v2/entities';
-import { Language } from '@prisma/client';
+import { Language } from '../graphql/enums';
 import { ProductCategoryService } from '../services/product-category.service';
 
 /**

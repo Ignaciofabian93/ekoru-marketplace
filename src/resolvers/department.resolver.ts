@@ -9,7 +9,7 @@ import {
   Int,
 } from '@nestjs/graphql';
 import { Logger } from '@nestjs/common';
-import { Language } from '@prisma/client';
+import { Language } from '../graphql/enums';
 import type { Department } from '../types/department';
 import type { DepartmentCategory } from '../types/category';
 import type { DepartmentTranslation } from '../types/department';

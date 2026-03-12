@@ -1,5 +1,5 @@
 import { Logger, Injectable } from '@nestjs/common';
-import { Language } from '@prisma/client';
+import { Language } from '../graphql/enums';
 import { PrismaService } from '../prisma/prisma.service';
 
 @Injectable()
