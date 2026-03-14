@@ -40,11 +40,11 @@ import { ProductCategoryResolver } from '../resolvers/product-category.resolver'
   imports: [PrismaModule],
   providers: [
     // Services
+    I18nService,
     CatalogService,
     DepartmentService,
     CategoryService,
     ProductCategoryService,
-    I18nService,
 
     // Repositories
     CatalogRepository,
@@ -60,6 +60,7 @@ import { ProductCategoryResolver } from '../resolvers/product-category.resolver'
   ],
   exports: [
     // Export services and repositories for use in other modules
+    I18nService,
     CatalogRepository,
     CatalogService,
     DepartmentRepository,
@@ -68,7 +69,6 @@ import { ProductCategoryResolver } from '../resolvers/product-category.resolver'
     CategoryService,
     ProductCategoryRepository,
     ProductCategoryService,
-    I18nService,
   ],
 })
 export class CatalogV2Module {}

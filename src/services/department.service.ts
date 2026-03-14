@@ -1,7 +1,8 @@
 import { Injectable, Logger, NotFoundException } from '@nestjs/common';
-import { Language, Department } from '@prisma/client';
+import { Department } from '@prisma/client';
 import { DepartmentRepository } from '../repositories/department.repository';
 import { I18nService } from '../common/i18n';
+import { Language } from '../graphql/enums';
 
 /**
  * Department Service - Business logic for department operations
