@@ -1,0 +1,7 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(find 'c:\\\\Users\\\\Ignacio\\\\Documents\\\\Workspace\\\\Projects\\\\ekoru\\\\apps\\\\new app\\\\app\\\\ekoru-repos\\\\ekoru-users' -type f \\\\\\(-name *.graphql -o -name schema.graphql \\\\\\))"
+    ]
+  }
+}

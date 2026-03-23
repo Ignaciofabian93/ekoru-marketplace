@@ -284,11 +284,20 @@ export class ProductsService {
         skip,
         take: pageSize,
         include: {
-          productCategory: true,
+          productCategory: {
+            include: {
+              materials: {
+                include: {
+                  material: true,
+                },
+              },
+            },
+          },
         },
       }),
       this.prisma.product.count({ where }),
     ]);
+    console.log('PRODUCTS:: ', products);
 
     return this.createPaginatedResponse(products, totalCount, page, pageSize);
   }
@@ -304,6 +313,7 @@ export class ProductsService {
     const product = await this.prisma.product.create({
       data: {
         ...input,
+        name: input.name,
         sellerId,
         updatedAt: new Date(),
       },
@@ -444,13 +454,16 @@ export class ProductsService {
     const hasPreviousPage = page > 1;
 
     return {
-      edges: items,
+      nodes: items,
       pageInfo: {
         currentPage: page,
         totalPages,
         totalCount,
         hasNextPage,
         hasPreviousPage,
+        pageSize,
+        startCursor: null,
+        endCursor: null,
       },
     };
   }

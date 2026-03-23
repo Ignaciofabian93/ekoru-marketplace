@@ -1,4 +1,12 @@
 import { InputType, Field, Int } from '@nestjs/graphql';
+import {
+  IsString,
+  IsInt,
+  IsOptional,
+  IsBoolean,
+  IsArray,
+  IsEnum,
+} from 'class-validator';
 import { Badge, ProductCondition } from '@prisma/client';
 
 /**
@@ -58,24 +66,32 @@ export class ProductSortInput {
 @InputType('AddProductInput')
 export class AddProductInput {
   @Field(() => String, { description: 'Product name' })
+  @IsString()
   name: string;
 
   @Field(() => String, { description: 'Product description' })
+  @IsString()
   description: string;
 
   @Field(() => String, { nullable: true, description: 'Product color' })
+  @IsOptional()
+  @IsString()
   color?: string;
 
   @Field(() => [String], { description: 'Product image URLs' })
+  @IsArray()
   images: string[];
 
   @Field(() => String, { description: 'Product brand' })
+  @IsString()
   brand: string;
 
   @Field(() => Int, { description: 'Product price' })
+  @IsInt()
   price: number;
 
   @Field(() => Int, { description: 'Product category ID' })
+  @IsInt()
   productCategoryId: number;
 
   @Field(() => [Badge], {
@@ -83,6 +99,8 @@ export class AddProductInput {
     description: 'Product badges',
     defaultValue: [],
   })
+  @IsOptional()
+  @IsArray()
   badges?: Badge[];
 
   @Field(() => [String], {
@@ -90,12 +108,17 @@ export class AddProductInput {
     description: 'Product interest tags',
     defaultValue: [],
   })
+  @IsOptional()
+  @IsArray()
   interests?: string[];
 
   @Field(() => ProductCondition, { description: 'Product condition' })
+  @IsEnum(ProductCondition)
   condition: ProductCondition;
 
   @Field(() => String, { nullable: true, description: 'Condition description' })
+  @IsOptional()
+  @IsString()
   conditionDescription?: string;
 
   @Field(() => Boolean, {
@@ -103,6 +126,8 @@ export class AddProductInput {
     description: 'Whether product is exchangeable',
     defaultValue: false,
   })
+  @IsOptional()
+  @IsBoolean()
   isExchangeable?: boolean;
 }
 
