@@ -1,3 +1,5 @@
+name: 'ekoru-marketplace-prod'
+
 services:
   ekoru-marketplace:
     image: ekoru-marketplace:prod

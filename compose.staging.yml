@@ -1,22 +1,24 @@
+name: 'ekoru-marketplace-staging'
+
 services:
-  ekoru-marketplace-qa:
-    image: ekoru-marketplace:qa
+  ekoru-marketplace-staging:
+    image: ekoru-marketplace:staging
     build:
       context: .
       dockerfile: Dockerfile
     restart: always
-    container_name: ekoru-marketplace-qa
+    container_name: ekoru-marketplace-staging
     env_file:
-      - .env.qa
+      - .env.staging
     ports:
       - '4002:4002'
     networks:
-      - ekoru-network
+      - ekoru-staging-network
     deploy:
       resources:
         limits:
-          cpus: '0.5' # Maximum 0.5 CPU cores (QA environment)
-          memory: 512M # Maximum 512MB RAM (QA environment)
+          cpus: '0.5' # Maximum 0.5 CPU cores (Staging environment)
+          memory: 512M # Maximum 512MB RAM (Staging environment)
         reservations:
           cpus: '0.25' # Minimum 0.25 CPU cores reserved
           memory: 256M # Minimum 256MB RAM reserved
@@ -36,5 +38,5 @@ services:
       start_period: 40s
 
 networks:
-  ekoru-network:
+  ekoru-staging-network:
     external: true
