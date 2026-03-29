@@ -297,8 +297,6 @@ export class ProductsService {
       }),
       this.prisma.product.count({ where }),
     ]);
-    console.log('PRODUCTS:: ', products);
-
     return this.createPaginatedResponse(products, totalCount, page, pageSize);
   }
 

@@ -1,7 +1,11 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { ProductsService } from './products.service';
 import { PrismaService } from '../prisma/prisma.service';
-import { NotFoundException } from '@nestjs/common';
+import {
+  NotFoundException,
+  UnauthorizedException,
+  ForbiddenException,
+} from '@nestjs/common';
 import { Badge, ProductCondition } from '@prisma/client';
 
 describe('ProductsService', () => {
@@ -104,13 +108,16 @@ describe('ProductsService', () => {
       const result = await service.getProducts(1, 10);
 
       expect(result).toEqual({
-        edges: products,
+        nodes: products,
         pageInfo: {
           currentPage: 1,
           totalPages: 1,
           totalCount: 1,
           hasNextPage: false,
           hasPreviousPage: false,
+          pageSize: 10,
+          startCursor: null,
+          endCursor: null,
         },
       });
     });
@@ -132,7 +139,7 @@ describe('ProductsService', () => {
         expect.objectContaining({
           where: expect.objectContaining({
             name: { contains: 'Test', mode: 'insensitive' },
-            price: { gte: 100, lte: 500 },
+            price: { lte: 500 },
             condition: ProductCondition.NEW,
           }),
         }),
@@ -163,7 +170,7 @@ describe('ProductsService', () => {
 
       const result = await service.getProductsBySeller('seller-123', 1, 10);
 
-      expect(result.edges).toEqual(products);
+      expect(result.nodes).toEqual(products);
       expect(prismaService.product.findMany).toHaveBeenCalledWith(
         expect.objectContaining({
           where: expect.objectContaining({
@@ -182,7 +189,7 @@ describe('ProductsService', () => {
 
       const result = await service.getProductsByCategory(1, 1, 10);
 
-      expect(result.edges).toEqual(products);
+      expect(result.nodes).toEqual(products);
       expect(prismaService.product.findMany).toHaveBeenCalledWith(
         expect.objectContaining({
           where: expect.objectContaining({
@@ -226,7 +233,7 @@ describe('ProductsService', () => {
 
       const result = await service.getProductsByDepartmentCategory(1, 1, 10);
 
-      expect(result.edges).toEqual([]);
+      expect(result.nodes).toEqual([]);
       expect(result.pageInfo.totalCount).toBe(0);
     });
   });
@@ -300,7 +307,7 @@ describe('ProductsService', () => {
       });
     });
 
-    it('should throw NotFoundException when sellerId is missing', async () => {
+    it('should throw UnauthorizedException when sellerId is missing', async () => {
       const input = {
         name: 'New Product',
         description: 'Description',
@@ -312,7 +319,7 @@ describe('ProductsService', () => {
       };
 
       await expect(service.addProduct(input, undefined)).rejects.toThrow(
-        NotFoundException,
+        UnauthorizedException,
       );
     });
   });
@@ -346,13 +353,13 @@ describe('ProductsService', () => {
       );
     });
 
-    it('should throw NotFoundException when seller does not own product', async () => {
+    it('should throw ForbiddenException when seller does not own product', async () => {
       const input = { id: 1, name: 'Updated' };
       mockPrismaService.product.findUnique.mockResolvedValue(mockProduct);
 
       await expect(
         service.updateProduct(input, 'wrong-seller'),
-      ).rejects.toThrow(NotFoundException);
+      ).rejects.toThrow(ForbiddenException);
     });
   });
 
@@ -393,12 +400,12 @@ describe('ProductsService', () => {
       expect(result.isActive).toBe(false);
     });
 
-    it('should throw NotFoundException when seller does not own product', async () => {
+    it('should throw ForbiddenException when seller does not own product', async () => {
       mockPrismaService.product.findUnique.mockResolvedValue(mockProduct);
 
       await expect(
         service.toggleProductActive(1, 'wrong-seller'),
-      ).rejects.toThrow(NotFoundException);
+      ).rejects.toThrow(ForbiddenException);
     });
   });
 });

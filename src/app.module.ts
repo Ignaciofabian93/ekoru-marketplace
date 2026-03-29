@@ -1,5 +1,7 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
+import { ThrottlerModule, ThrottlerGuard } from '@nestjs/throttler';
+import { APP_GUARD } from '@nestjs/core';
 import { GraphQLModule } from '@nestjs/graphql';
 import {
   ApolloFederationDriver,
@@ -32,6 +34,14 @@ import { PrometheusModule } from '@willsoto/nestjs-prometheus';
       load: [configuration],
     }),
 
+    // Rate limiting: 100 requests per minute per IP
+    ThrottlerModule.forRoot([
+      {
+        ttl: 60000,
+        limit: 100,
+      },
+    ]),
+
     // GraphQL Federation
     GraphQLModule.forRootAsync<ApolloFederationDriverConfig>({
       driver: ApolloFederationDriver,
@@ -61,7 +71,10 @@ import { PrometheusModule } from '@willsoto/nestjs-prometheus';
     // Products management
     ProductsModule,
   ],
-  providers: [JSONScalar],
+  providers: [
+    JSONScalar,
+    { provide: APP_GUARD, useClass: ThrottlerGuard },
+  ],
   controllers: [HealthController],
 })
 export class AppModule {}
