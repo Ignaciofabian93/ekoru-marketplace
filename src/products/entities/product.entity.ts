@@ -13,7 +13,7 @@ import { EnvironmentalImpactEntity } from './environmental-impact.entity';
 @Directive('@key(fields: "id")')
 export class SellerEntity {
   @Field(() => ID, { description: 'Seller unique identifier' })
-  id: string;
+  id!: string;
 }
 
 /**
@@ -25,58 +25,58 @@ export class SellerEntity {
 @Directive('@key(fields: "id")')
 export class ProductEntity {
   @Field(() => Int, { description: 'Unique product identifier' })
-  id: number;
+  id!: number;
 
   @Field(() => String, { description: 'Product name' })
-  name: string;
+  name!: string;
 
   @Field(() => String, { description: 'Product description' })
-  description: string;
+  description!: string;
 
   @Field(() => String, { nullable: true, description: 'Product color' })
   color?: string;
 
   @Field(() => [String], { description: 'Product image URLs' })
-  images: string[];
+  images!: string[];
 
   @Field(() => String, { description: 'Product brand' })
-  brand: string;
+  brand!: string;
 
   @Field(() => Int, { description: 'Product price' })
-  price: number;
+  price!: number;
 
   @Field(() => Int, { description: 'Product category ID' })
-  productCategoryId: number;
+  productCategoryId!: number;
 
   @Field(() => [Badge], { description: 'Product badges' })
-  badges: Badge[];
+  badges!: Badge[];
 
   @Field(() => [String], { description: 'Product interest tags' })
-  interests: string[];
+  interests!: string[];
 
   @Field(() => ProductCondition, { description: 'Product condition' })
-  condition: ProductCondition;
+  condition!: ProductCondition;
 
   @Field(() => String, { nullable: true, description: 'Condition description' })
   conditionDescription?: string;
 
   @Field(() => Boolean, { description: 'Whether product is active' })
-  isActive: boolean;
+  isActive!: boolean;
 
   @Field(() => Boolean, { description: 'Whether product is exchangeable' })
-  isExchangeable: boolean;
+  isExchangeable!: boolean;
 
   @Field(() => String, { description: 'Seller ID' })
-  sellerId: string;
+  sellerId!: string;
 
   @Field(() => Int, { description: 'Number of views' })
-  viewCount: number;
+  viewCount!: number;
 
   @Field(() => Date, { description: 'Creation timestamp' })
-  createdAt: Date;
+  createdAt!: Date;
 
   @Field(() => Date, { description: 'Last update timestamp' })
-  updatedAt: Date;
+  updatedAt!: Date;
 
   @Field(() => Date, {
     nullable: true,

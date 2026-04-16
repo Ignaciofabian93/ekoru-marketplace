@@ -12,17 +12,17 @@ export class EnvironmentalImpactEntity {
   @Field(() => Float, {
     description: 'Total estimated CO2 savings in kilograms',
   })
-  totalCo2SavingsKG: number;
+  totalCo2SavingsKG!: number;
 
   @Field(() => Float, {
     description: 'Total estimated water savings in liters',
   })
-  totalWaterSavingsLT: number;
+  totalWaterSavingsLT!: number;
 
   @Field(() => [MaterialBreakdown], {
     description: 'Breakdown of impact by material type',
   })
-  materialBreakdown: MaterialBreakdown[];
+  materialBreakdown!: MaterialBreakdown[];
 }
 
 /**
@@ -32,19 +32,19 @@ export class EnvironmentalImpactEntity {
 @Directive('@shareable')
 export class MaterialBreakdown {
   @Field(() => String, { description: 'Material type name' })
-  materialType: string;
+  materialType!: string;
 
   @Field(() => Float, { description: 'Quantity of this material' })
-  quantity: number;
+  quantity!: number;
 
   @Field(() => String, { description: 'Unit of measurement' })
-  unit: string;
+  unit!: string;
 
   @Field(() => Float, { description: 'CO2 savings for this material in kg' })
-  co2SavingsKG: number;
+  co2SavingsKG!: number;
 
   @Field(() => Float, {
     description: 'Water savings for this material in liters',
   })
-  waterSavingsLT: number;
+  waterSavingsLT!: number;
 }
