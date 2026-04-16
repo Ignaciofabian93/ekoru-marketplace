@@ -15,8 +15,8 @@ export class ProductConnectionEntity {
     description: 'List of products',
     nullable: true,
   })
-  nodes: ProductEntity[];
+  nodes!: ProductEntity[];
 
   @Field(() => PageInfoEntity, { description: 'Pagination information' })
-  pageInfo: PageInfoEntity;
+  pageInfo!: PageInfoEntity;
 }

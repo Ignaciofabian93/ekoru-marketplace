@@ -60,6 +60,7 @@
     "@types/express": "^5.0.0",
     "@types/graphql-type-json": "^0.3.5",
     "@types/jest": "^30.0.0",
+    "@types/mocha": "^10.0.10",
     "@types/node": "^22.10.7",
     "@types/pg": "^8.16.0",
     "@types/supertest": "^6.0.2",

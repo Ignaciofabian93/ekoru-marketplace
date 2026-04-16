@@ -68,9 +68,10 @@ export class CategoryRepository {
           // Return results in the same order as requested keys
           return compositeKeys.map((key) => translationMap.get(key) || null);
         } catch (error) {
+          const err = error as Error;
           this.logger.error(
-            `Error loading department category translations: ${error.message}`,
-            error.stack,
+            `Error loading department category translations: ${err.message}`,
+            err.stack,
           );
           throw error;
         }
@@ -116,9 +117,10 @@ export class CategoryRepository {
           // Return results in the same order as requested department IDs
           return departmentIds.map((id) => categoryMap.get(id) || []);
         } catch (error) {
+          const err = error as Error;
           this.logger.error(
-            `Error loading department categories: ${error.message}`,
-            error.stack,
+            `Error loading department categories: ${err.message}`,
+            err.stack,
           );
           throw error;
         }
@@ -154,9 +156,10 @@ export class CategoryRepository {
 
       return translation?.departmentCategory || null;
     } catch (error) {
+      const err = error as Error;
       this.logger.error(
-        `Error finding category by slug: ${error.message}`,
-        error.stack,
+        `Error finding category by slug: ${err.message}`,
+        err.stack,
       );
       throw error;
     }
@@ -182,9 +185,10 @@ export class CategoryRepository {
         take: limit,
       });
     } catch (error) {
+      const err = error as Error;
       this.logger.error(
-        `Error finding all categories: ${error.message}`,
-        error.stack,
+        `Error finding all categories: ${err.message}`,
+        err.stack,
       );
       throw error;
     }
@@ -210,9 +214,10 @@ export class CategoryRepository {
         },
       });
     } catch (error) {
+      const err = error as Error;
       this.logger.error(
-        `Error finding categories by department: ${error.message}`,
-        error.stack,
+        `Error finding categories by department: ${err.message}`,
+        err.stack,
       );
       throw error;
     }

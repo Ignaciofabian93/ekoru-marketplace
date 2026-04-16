@@ -50,7 +50,8 @@ export class ProductSortInput {
   @Field(() => String, {
     description: 'Field to sort by (e.g., price, createdAt, name)',
   })
-  field: string;
+  @IsOptional()
+  field?: string;
 
   @Field(() => String, {
     nullable: true,
@@ -67,11 +68,11 @@ export class ProductSortInput {
 export class AddProductInput {
   @Field(() => String, { description: 'Product name' })
   @IsString()
-  name: string;
+  name!: string;
 
   @Field(() => String, { description: 'Product description' })
   @IsString()
-  description: string;
+  description!: string;
 
   @Field(() => String, { nullable: true, description: 'Product color' })
   @IsOptional()
@@ -80,19 +81,19 @@ export class AddProductInput {
 
   @Field(() => [String], { description: 'Product image URLs' })
   @IsArray()
-  images: string[];
+  images!: string[];
 
   @Field(() => String, { description: 'Product brand' })
   @IsString()
-  brand: string;
+  brand!: string;
 
   @Field(() => Int, { description: 'Product price' })
   @IsInt()
-  price: number;
+  price!: number;
 
   @Field(() => Int, { description: 'Product category ID' })
   @IsInt()
-  productCategoryId: number;
+  productCategoryId!: number;
 
   @Field(() => [Badge], {
     nullable: true,
@@ -114,7 +115,7 @@ export class AddProductInput {
 
   @Field(() => ProductCondition, { description: 'Product condition' })
   @IsEnum(ProductCondition)
-  condition: ProductCondition;
+  condition!: ProductCondition;
 
   @Field(() => String, { nullable: true, description: 'Condition description' })
   @IsOptional()
@@ -137,7 +138,7 @@ export class AddProductInput {
 @InputType('UpdateProductInput')
 export class UpdateProductInput {
   @Field(() => Int, { description: 'Product ID to update' })
-  id: number;
+  id!: number;
 
   @Field(() => String, { nullable: true, description: 'Product name' })
   name?: string;

@@ -71,10 +71,7 @@ import { PrometheusModule } from '@willsoto/nestjs-prometheus';
     // Products management
     ProductsModule,
   ],
-  providers: [
-    JSONScalar,
-    { provide: APP_GUARD, useClass: ThrottlerGuard },
-  ],
+  providers: [JSONScalar, { provide: APP_GUARD, useClass: ThrottlerGuard }],
   controllers: [HealthController],
 })
 export class AppModule {}

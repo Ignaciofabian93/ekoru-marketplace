@@ -98,9 +98,10 @@ export class CatalogRepository {
         })),
       }));
     } catch (error) {
+      const err = error as Error;
       this.logger.error(
-        `Error getting marketplace catalog: ${error.message}`,
-        error.stack,
+        `Error getting marketplace catalog: ${err.message}`,
+        err.stack,
       );
       throw error;
     }

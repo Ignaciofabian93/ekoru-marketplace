@@ -60,9 +60,10 @@ export class DepartmentRepository {
           // Return results in the same order as requested keys
           return compositeKeys.map((key) => translationMap.get(key) || null);
         } catch (error) {
+          const err = error as Error;
           this.logger.error(
-            `Error loading department translations: ${error.message}`,
-            error.stack,
+            `Error loading department translations: ${err.message}`,
+            err.stack,
           );
           throw error;
         }
@@ -97,9 +98,10 @@ export class DepartmentRepository {
 
           return ids.map((id) => departmentMap.get(id) || null);
         } catch (error) {
+          const err = error as Error;
           this.logger.error(
-            `Error loading departments: ${error.message}`,
-            error.stack,
+            `Error loading departments: ${err.message}`,
+            err.stack,
           );
           throw error;
         }
@@ -136,9 +138,10 @@ export class DepartmentRepository {
 
       return translation?.department || null;
     } catch (error) {
+      const err = error as Error;
       this.logger.error(
-        `Error finding department by slug: ${error.message}`,
-        error.stack,
+        `Error finding department by slug: ${err.message}`,
+        err.stack,
       );
       throw error;
     }
@@ -199,9 +202,10 @@ export class DepartmentRepository {
         skip: offset,
       });
     } catch (error) {
+      const err = error as Error;
       this.logger.error(
-        `Error finding all departments: ${error.message}`,
-        error.stack,
+        `Error finding all departments: ${err.message}`,
+        err.stack,
       );
       throw error;
     }

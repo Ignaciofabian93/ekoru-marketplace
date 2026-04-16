@@ -65,9 +65,10 @@ export class ProductCategoryRepository {
           // Return results in the same order as requested keys
           return compositeKeys.map((key) => translationMap.get(key) || null);
         } catch (error) {
+          const err = error as Error;
           this.logger.error(
-            `Error loading product category translations: ${error.message}`,
-            error.stack,
+            `Error loading product category translations: ${err.message}`,
+            err.stack,
           );
           throw error;
         }
@@ -121,9 +122,10 @@ export class ProductCategoryRepository {
           // Return results in the same order as requested category IDs
           return categoryIds.map((id) => productCategoryMap.get(id) || []);
         } catch (error) {
+          const err = error as Error;
           this.logger.error(
-            `Error loading product categories: ${error.message}`,
-            error.stack,
+            `Error loading product categories: ${err.message}`,
+            err.stack,
           );
           throw error;
         }
@@ -159,9 +161,10 @@ export class ProductCategoryRepository {
 
       return translation?.productCategory || null;
     } catch (error) {
+      const err = error as Error;
       this.logger.error(
-        `Error finding product category by slug: ${error.message}`,
-        error.stack,
+        `Error finding product category by slug: ${err.message}`,
+        err.stack,
       );
       throw error;
     }
@@ -187,9 +190,10 @@ export class ProductCategoryRepository {
         take: limit,
       });
     } catch (error) {
+      const err = error as Error;
       this.logger.error(
-        `Error finding all product categories: ${error.message}`,
-        error.stack,
+        `Error finding all product categories: ${err.message}`,
+        err.stack,
       );
       throw error;
     }
@@ -213,9 +217,10 @@ export class ProductCategoryRepository {
         },
       });
     } catch (error) {
+      const err = error as Error;
       this.logger.error(
-        `Error finding product categories by category: ${error.message}`,
-        error.stack,
+        `Error finding product categories by category: ${err.message}`,
+        err.stack,
       );
       throw error;
     }
