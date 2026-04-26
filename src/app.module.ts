@@ -1,6 +1,7 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
-import { ThrottlerModule, ThrottlerGuard } from '@nestjs/throttler';
+import { ThrottlerModule } from '@nestjs/throttler';
+import { GqlThrottlerGuard } from './common/guards/gql-throttler.guard';
 import { APP_GUARD } from '@nestjs/core';
 import { GraphQLModule } from '@nestjs/graphql';
 import {
@@ -71,7 +72,7 @@ import { PrometheusModule } from '@willsoto/nestjs-prometheus';
     // Products management
     ProductsModule,
   ],
-  providers: [JSONScalar, { provide: APP_GUARD, useClass: ThrottlerGuard }],
+  providers: [JSONScalar, { provide: APP_GUARD, useClass: GqlThrottlerGuard }],
   controllers: [HealthController],
 })
 export class AppModule {}
