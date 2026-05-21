@@ -8,7 +8,9 @@ export class GqlThrottlerGuard extends ThrottlerGuard {
     const gqlCtx = GqlExecutionContext.create(context);
     const ctx = gqlCtx.getContext();
     if (ctx?.req) {
-      return { req: ctx.req, res: ctx.res };
+      // Apollo Server 4 / Federation doesn't always populate ctx.res, but
+      // Express attaches the response to the request as req.res.
+      return { req: ctx.req, res: ctx.res ?? ctx.req.res };
     }
     const http = context.switchToHttp();
     return { req: http.getRequest(), res: http.getResponse() };
