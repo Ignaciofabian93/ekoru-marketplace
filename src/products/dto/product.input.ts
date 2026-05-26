@@ -6,6 +6,7 @@ import {
   IsBoolean,
   IsArray,
   IsEnum,
+  IsIn,
 } from 'class-validator';
 import { Badge, ProductCondition } from '@prisma/client';
 
@@ -18,27 +19,39 @@ export class ProductFilterInput {
     nullable: true,
     description: 'Filter by product name',
   })
+  @IsOptional()
+  @IsString()
   name?: string;
 
   @Field(() => Int, { nullable: true, description: 'Minimum price filter' })
+  @IsOptional()
+  @IsInt()
   minPrice?: number;
 
   @Field(() => Int, { nullable: true, description: 'Maximum price filter' })
+  @IsOptional()
+  @IsInt()
   maxPrice?: number;
 
   @Field(() => ProductCondition, {
     nullable: true,
     description: 'Filter by product condition',
   })
+  @IsOptional()
+  @IsEnum(ProductCondition)
   condition?: ProductCondition;
 
   @Field(() => Boolean, {
     nullable: true,
     description: 'Filter by exchangeable status',
   })
+  @IsOptional()
+  @IsBoolean()
   isExchangeable?: boolean;
 
   @Field(() => [Badge], { nullable: true, description: 'Filter by badges' })
+  @IsOptional()
+  @IsArray()
   badges?: Badge[];
 }
 
@@ -50,6 +63,7 @@ export class ProductSortInput {
   @Field(() => String, {
     description: 'Field to sort by (e.g., price, createdAt, name)',
   })
+  @IsString()
   @IsOptional()
   field?: string;
 
@@ -58,6 +72,8 @@ export class ProductSortInput {
     description: 'Sort order: asc or desc',
     defaultValue: 'desc',
   })
+  @IsOptional()
+  @IsIn(['asc', 'desc'])
   order?: 'asc' | 'desc';
 }
 
