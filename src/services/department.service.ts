@@ -30,10 +30,13 @@ export class DepartmentService {
    * @example
    * const dept = await getDepartmentBySlug('tecnologia', Language.ES);
    */
-  async getDepartmentBySlug(
-    slug: string,
-    language?: Language,
-  ): Promise<Department> {
+  async getDepartmentBySlug({
+    slug,
+    language,
+  }: {
+    slug: string;
+    language?: Language;
+  }): Promise<Department> {
     const lang = language ?? this.i18nService.getDefaultLanguage();
 
     this.logger.debug(`Getting department by slug: ${slug}, language: ${lang}`);
@@ -62,11 +65,15 @@ export class DepartmentService {
    * @example
    * const departments = await getDepartments(10, 0, Language.ES);
    */
-  async getDepartments(
-    limit: number = 20,
-    offset: number = 0,
-    language?: Language,
-  ): Promise<Department[]> {
+  async getDepartments({
+    limit = 20,
+    offset = 0,
+    language,
+  }: {
+    limit?: number;
+    offset?: number;
+    language?: Language;
+  }): Promise<Department[]> {
     const lang = language ?? this.i18nService.getDefaultLanguage();
 
     this.logger.debug(

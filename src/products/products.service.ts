@@ -41,12 +41,17 @@ export class ProductsService {
   /**
    * Get all products with pagination and filters
    */
-  async getProducts(
-    page: number,
-    pageSize: number,
-    filter?: ProductFilterInput,
-    sort?: ProductSortInput,
-  ) {
+  async getProducts({
+    page,
+    pageSize,
+    filter,
+    sort,
+  }: {
+    page: number;
+    pageSize: number;
+    filter?: ProductFilterInput;
+    sort?: ProductSortInput;
+  }) {
     const skip = (page - 1) * pageSize;
     const where = this.buildWhereClause(filter);
     const orderBy = this.buildOrderBy(sort);
@@ -70,13 +75,19 @@ export class ProductsService {
   /**
    * Get products by seller ID
    */
-  async getProductsBySeller(
-    sellerId: string,
-    page: number,
-    pageSize: number,
-    filter?: ProductFilterInput,
-    sort?: ProductSortInput,
-  ) {
+  async getProductsBySeller({
+    sellerId,
+    page,
+    pageSize,
+    filter,
+    sort,
+  }: {
+    sellerId: string;
+    page: number;
+    pageSize: number;
+    filter?: ProductFilterInput;
+    sort?: ProductSortInput;
+  }) {
     const skip = (page - 1) * pageSize;
     const where = {
       ...this.buildWhereClause(filter),
@@ -104,13 +115,19 @@ export class ProductsService {
    * Get products by Product Category ID
    * Returns only products in this specific category (e.g., only speakers)
    */
-  async getProductsByCategory(
-    productCategoryId: number,
-    page: number,
-    pageSize: number,
-    filter?: ProductFilterInput,
-    sort?: ProductSortInput,
-  ) {
+  async getProductsByCategory({
+    productCategoryId,
+    page,
+    pageSize,
+    filter,
+    sort,
+  }: {
+    productCategoryId: number;
+    page: number;
+    pageSize: number;
+    filter?: ProductFilterInput;
+    sort?: ProductSortInput;
+  }) {
     const skip = (page - 1) * pageSize;
     const where = {
       ...this.buildWhereClause(filter),
@@ -139,13 +156,19 @@ export class ProductsService {
    * Returns all products from all product categories under this department category
    * Example: "Audio" → speakers, microphones, cables, etc.
    */
-  async getProductsByDepartmentCategory(
-    departmentCategoryId: number,
-    page: number,
-    pageSize: number,
-    filter?: ProductFilterInput,
-    sort?: ProductSortInput,
-  ) {
+  async getProductsByDepartmentCategory({
+    departmentCategoryId,
+    page,
+    pageSize,
+    filter,
+    sort,
+  }: {
+    departmentCategoryId: number;
+    page: number;
+    pageSize: number;
+    filter?: ProductFilterInput;
+    sort?: ProductSortInput;
+  }) {
     // First, get all product category IDs under this department category
     const productCategories = await this.prisma.productCategory.findMany({
       where: {
@@ -193,13 +216,19 @@ export class ProductsService {
    * Returns all products from all categories under this department
    * Example: "Technology" → all products from audio, TV, home tech, etc.
    */
-  async getProductsByDepartment(
-    departmentId: number,
-    page: number,
-    pageSize: number,
-    filter?: ProductFilterInput,
-    sort?: ProductSortInput,
-  ) {
+  async getProductsByDepartment({
+    departmentId,
+    page,
+    pageSize,
+    filter,
+    sort,
+  }: {
+    departmentId: number;
+    page: number;
+    pageSize: number;
+    filter?: ProductFilterInput;
+    sort?: ProductSortInput;
+  }) {
     // First, get all department category IDs under this department
     const departmentCategories = await this.prisma.departmentCategory.findMany({
       where: {
@@ -264,12 +293,17 @@ export class ProductsService {
   /**
    * Get exchangeable products
    */
-  async getExchangeableProducts(
-    page: number,
-    pageSize: number,
-    filter?: ProductFilterInput,
-    sort?: ProductSortInput,
-  ) {
+  async getExchangeableProducts({
+    page,
+    pageSize,
+    filter,
+    sort,
+  }: {
+    page: number;
+    pageSize: number;
+    filter?: ProductFilterInput;
+    sort?: ProductSortInput;
+  }) {
     const skip = (page - 1) * pageSize;
     const where = {
       ...this.buildWhereClause(filter),
@@ -301,9 +335,16 @@ export class ProductsService {
   }
 
   /**
-   * Add a new product
+   * Add a new product. Creation is seller-scoped: a product is always owned by
+   * the calling seller.
    */
-  async addProduct(input: AddProductInput, sellerId?: string) {
+  async addProduct({
+    input,
+    sellerId,
+  }: {
+    input: AddProductInput;
+    sellerId?: string;
+  }) {
     if (!sellerId) {
       throw new UnauthorizedException('Seller authentication required');
     }
@@ -324,11 +365,20 @@ export class ProductsService {
   }
 
   /**
-   * Update an existing product
+   * Update an existing product. The owning seller or a platform admin may
+   * update; admins bypass the ownership check.
    */
-  async updateProduct(input: UpdateProductInput, sellerId?: string) {
-    if (!sellerId) {
-      throw new UnauthorizedException('Seller authentication required');
+  async updateProduct({
+    input,
+    sellerId,
+    adminId,
+  }: {
+    input: UpdateProductInput;
+    sellerId?: string;
+    adminId?: string;
+  }) {
+    if (!sellerId && !adminId) {
+      throw new UnauthorizedException('Authentication required');
     }
 
     const product = await this.prisma.product.findUnique({
@@ -339,7 +389,7 @@ export class ProductsService {
       throw new NotFoundException(`Product with ID ${input.id} not found`);
     }
 
-    if (product.sellerId !== sellerId) {
+    if (!adminId && product.sellerId !== sellerId) {
       throw new ForbiddenException(
         'You do not have permission to update this product',
       );
@@ -361,15 +411,34 @@ export class ProductsService {
   }
 
   /**
-   * Delete a product (soft delete)
+   * Delete a product (soft delete). The owning seller or a platform admin may
+   * delete; admins bypass the ownership check.
    */
-  async deleteProduct(id: number) {
+  async deleteProduct({
+    id,
+    sellerId,
+    adminId,
+  }: {
+    id: number;
+    sellerId?: string;
+    adminId?: string;
+  }) {
+    if (!sellerId && !adminId) {
+      throw new UnauthorizedException('Authentication required');
+    }
+
     const product = await this.prisma.product.findUnique({
       where: { id },
     });
 
     if (!product) {
       throw new NotFoundException(`Product with ID ${id} not found`);
+    }
+
+    if (!adminId && product.sellerId !== sellerId) {
+      throw new ForbiddenException(
+        'You do not have permission to delete this product',
+      );
     }
 
     const deletedProduct = await this.prisma.product.update({
@@ -387,11 +456,20 @@ export class ProductsService {
   }
 
   /**
-   * Toggle product active status
+   * Toggle product active status. The owning seller or a platform admin may
+   * toggle; admins bypass the ownership check.
    */
-  async toggleProductActive(id: number, sellerId?: string) {
-    if (!sellerId) {
-      throw new UnauthorizedException('Seller authentication required');
+  async toggleProductActive({
+    id,
+    sellerId,
+    adminId,
+  }: {
+    id: number;
+    sellerId?: string;
+    adminId?: string;
+  }) {
+    if (!sellerId && !adminId) {
+      throw new UnauthorizedException('Authentication required');
     }
 
     const product = await this.prisma.product.findUnique({
@@ -402,7 +480,7 @@ export class ProductsService {
       throw new NotFoundException(`Product with ID ${id} not found`);
     }
 
-    if (product.sellerId !== sellerId) {
+    if (!adminId && product.sellerId !== sellerId) {
       throw new ForbiddenException(
         'You do not have permission to modify this product',
       );

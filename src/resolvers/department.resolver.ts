@@ -56,7 +56,7 @@ export class DepartmentResolver {
     // use the same language the client explicitly requested.
     context.language = language;
 
-    return this.departmentService.getDepartmentBySlug(slug, language);
+    return this.departmentService.getDepartmentBySlug({ slug, language });
   }
 
   /**
@@ -86,11 +86,11 @@ export class DepartmentResolver {
     // use the same language the client explicitly requested.
     context.language = language;
 
-    const departments = await this.departmentService.getDepartments(
+    const departments = await this.departmentService.getDepartments({
       limit,
       offset,
       language,
-    );
+    });
 
     // Prime the translation cache for all departments
     if (departments.length > 0) {

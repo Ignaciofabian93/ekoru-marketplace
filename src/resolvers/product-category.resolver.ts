@@ -57,7 +57,10 @@ export class ProductCategoryResolver {
     // Override context language so field resolvers use the same language the client requested.
     context.language = language;
 
-    return this.productCategoryService.getProductCategoryBySlug(slug, language);
+    return this.productCategoryService.getProductCategoryBySlug({
+      slug,
+      language,
+    });
   }
 
   /**
@@ -87,11 +90,11 @@ export class ProductCategoryResolver {
     context.language = language;
 
     const productCategories =
-      await this.productCategoryService.getProductCategories(
+      await this.productCategoryService.getProductCategories({
         limit,
         offset,
         language,
-      );
+      });
 
     if (productCategories.length > 0) {
       const categoryIds = productCategories.map((cat) => cat.id);

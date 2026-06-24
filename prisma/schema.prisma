@@ -316,25 +316,57 @@ model MaterialImpactEstimateTranslation {
 }
 
 model WaterImpactMessage {
-  id        Int      @id @default(autoincrement())
-  min       Float    @default(0.0)
-  max       Float    @default(0.0)
-  message1  String
-  message2  String
-  message3  String
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id           Int                             @id @default(autoincrement())
+  min          Float                           @default(0.0)
+  max          Float                           @default(0.0)
+  message1     String
+  message2     String
+  message3     String
+  createdAt    DateTime                        @default(now())
+  updatedAt    DateTime                        @updatedAt
+  translations WaterImpactMessageTranslation[]
+}
+
+model WaterImpactMessageTranslation {
+  id                   Int                @id @default(autoincrement())
+  waterImpactMessageId Int
+  language             Language
+  message1             String
+  message2             String
+  message3             String
+  createdAt            DateTime           @default(now())
+  updatedAt            DateTime           @updatedAt
+  waterImpactMessage   WaterImpactMessage @relation(fields: [waterImpactMessageId], references: [id], onDelete: Cascade)
+
+  @@unique([waterImpactMessageId, language])
+  @@index([language])
 }
 
 model Co2ImpactMessage {
-  id        Int      @id @default(autoincrement())
-  min       Float    @default(0.0)
-  max       Float    @default(0.0)
-  message1  String
-  message2  String
-  message3  String
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id           Int                           @id @default(autoincrement())
+  min          Float                         @default(0.0)
+  max          Float                         @default(0.0)
+  message1     String
+  message2     String
+  message3     String
+  createdAt    DateTime                      @default(now())
+  updatedAt    DateTime                      @updatedAt
+  translations Co2ImpactMessageTranslation[]
+}
+
+model Co2ImpactMessageTranslation {
+  id                 Int              @id @default(autoincrement())
+  co2ImpactMessageId Int
+  language           Language
+  message1           String
+  message2           String
+  message3           String
+  createdAt          DateTime         @default(now())
+  updatedAt          DateTime         @updatedAt
+  co2ImpactMessage   Co2ImpactMessage @relation(fields: [co2ImpactMessageId], references: [id], onDelete: Cascade)
+
+  @@unique([co2ImpactMessageId, language])
+  @@index([language])
 }
 
 model Advertisement {

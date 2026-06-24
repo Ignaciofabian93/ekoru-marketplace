@@ -105,7 +105,7 @@ describe('ProductsService', () => {
       mockPrismaService.product.findMany.mockResolvedValue(products);
       mockPrismaService.product.count.mockResolvedValue(1);
 
-      const result = await service.getProducts(1, 10);
+      const result = await service.getProducts({ page: 1, pageSize: 10 });
 
       expect(result).toEqual({
         nodes: products,
@@ -133,7 +133,7 @@ describe('ProductsService', () => {
         condition: ProductCondition.NEW,
       };
 
-      await service.getProducts(1, 10, filter);
+      await service.getProducts({ page: 1, pageSize: 10, filter });
 
       expect(prismaService.product.findMany).toHaveBeenCalledWith(
         expect.objectContaining({
@@ -152,7 +152,7 @@ describe('ProductsService', () => {
 
       const sort = { field: 'price', order: 'asc' as const };
 
-      await service.getProducts(1, 10, undefined, sort);
+      await service.getProducts({ page: 1, pageSize: 10, sort });
 
       expect(prismaService.product.findMany).toHaveBeenCalledWith(
         expect.objectContaining({
@@ -168,7 +168,11 @@ describe('ProductsService', () => {
       mockPrismaService.product.findMany.mockResolvedValue(products);
       mockPrismaService.product.count.mockResolvedValue(1);
 
-      const result = await service.getProductsBySeller('seller-123', 1, 10);
+      const result = await service.getProductsBySeller({
+        sellerId: 'seller-123',
+        page: 1,
+        pageSize: 10,
+      });
 
       expect(result.nodes).toEqual(products);
       expect(prismaService.product.findMany).toHaveBeenCalledWith(
@@ -187,7 +191,11 @@ describe('ProductsService', () => {
       mockPrismaService.product.findMany.mockResolvedValue(products);
       mockPrismaService.product.count.mockResolvedValue(1);
 
-      const result = await service.getProductsByCategory(1, 1, 10);
+      const result = await service.getProductsByCategory({
+        productCategoryId: 1,
+        page: 1,
+        pageSize: 10,
+      });
 
       expect(result.nodes).toEqual(products);
       expect(prismaService.product.findMany).toHaveBeenCalledWith(
@@ -209,7 +217,11 @@ describe('ProductsService', () => {
       mockPrismaService.product.findMany.mockResolvedValue([mockProduct]);
       mockPrismaService.product.count.mockResolvedValue(1);
 
-      await service.getProductsByDepartmentCategory(1, 1, 10);
+      await service.getProductsByDepartmentCategory({
+        departmentCategoryId: 1,
+        page: 1,
+        pageSize: 10,
+      });
 
       expect(prismaService.productCategory.findMany).toHaveBeenCalledWith({
         where: {
@@ -231,7 +243,11 @@ describe('ProductsService', () => {
     it('should return empty result when no categories found', async () => {
       mockPrismaService.productCategory.findMany.mockResolvedValue([]);
 
-      const result = await service.getProductsByDepartmentCategory(1, 1, 10);
+      const result = await service.getProductsByDepartmentCategory({
+        departmentCategoryId: 1,
+        page: 1,
+        pageSize: 10,
+      });
 
       expect(result.nodes).toEqual([]);
       expect(result.pageInfo.totalCount).toBe(0);
@@ -252,7 +268,11 @@ describe('ProductsService', () => {
       mockPrismaService.product.findMany.mockResolvedValue([mockProduct]);
       mockPrismaService.product.count.mockResolvedValue(1);
 
-      await service.getProductsByDepartment(1, 1, 10);
+      await service.getProductsByDepartment({
+        departmentId: 1,
+        page: 1,
+        pageSize: 10,
+      });
 
       expect(prismaService.departmentCategory.findMany).toHaveBeenCalled();
       expect(prismaService.productCategory.findMany).toHaveBeenCalled();
@@ -267,7 +287,7 @@ describe('ProductsService', () => {
       ]);
       mockPrismaService.product.count.mockResolvedValue(1);
 
-      await service.getExchangeableProducts(1, 10);
+      await service.getExchangeableProducts({ page: 1, pageSize: 10 });
 
       expect(prismaService.product.findMany).toHaveBeenCalledWith(
         expect.objectContaining({
@@ -295,7 +315,10 @@ describe('ProductsService', () => {
 
       mockPrismaService.product.create.mockResolvedValue(mockProduct);
 
-      const result = await service.addProduct(input, 'seller-123');
+      const result = await service.addProduct({
+        input,
+        sellerId: 'seller-123',
+      });
 
       expect(result).toEqual(mockProduct);
       expect(prismaService.product.create).toHaveBeenCalledWith({
@@ -318,9 +341,9 @@ describe('ProductsService', () => {
         condition: ProductCondition.NEW,
       };
 
-      await expect(service.addProduct(input, undefined)).rejects.toThrow(
-        UnauthorizedException,
-      );
+      await expect(
+        service.addProduct({ input, sellerId: undefined }),
+      ).rejects.toThrow(UnauthorizedException);
     });
   });
 
@@ -338,7 +361,10 @@ describe('ProductsService', () => {
         ...input,
       });
 
-      const result = await service.updateProduct(input, 'seller-123');
+      const result = await service.updateProduct({
+        input,
+        sellerId: 'seller-123',
+      });
 
       expect(result.name).toBe('Updated Product');
       expect(prismaService.product.update).toHaveBeenCalled();
@@ -348,9 +374,9 @@ describe('ProductsService', () => {
       const input = { id: 999, name: 'Updated' };
       mockPrismaService.product.findUnique.mockResolvedValue(null);
 
-      await expect(service.updateProduct(input, 'seller-123')).rejects.toThrow(
-        NotFoundException,
-      );
+      await expect(
+        service.updateProduct({ input, sellerId: 'seller-123' }),
+      ).rejects.toThrow(NotFoundException);
     });
 
     it('should throw ForbiddenException when seller does not own product', async () => {
@@ -358,7 +384,7 @@ describe('ProductsService', () => {
       mockPrismaService.product.findUnique.mockResolvedValue(mockProduct);
 
       await expect(
-        service.updateProduct(input, 'wrong-seller'),
+        service.updateProduct({ input, sellerId: 'wrong-seller' }),
       ).rejects.toThrow(ForbiddenException);
     });
   });
@@ -372,7 +398,10 @@ describe('ProductsService', () => {
         isActive: false,
       });
 
-      const result = await service.deleteProduct(1);
+      const result = await service.deleteProduct({
+        id: 1,
+        sellerId: 'seller-123',
+      });
 
       expect(result.isActive).toBe(false);
       expect(result.deletedAt).toBeTruthy();
@@ -381,9 +410,9 @@ describe('ProductsService', () => {
     it('should throw NotFoundException when product not found', async () => {
       mockPrismaService.product.findUnique.mockResolvedValue(null);
 
-      await expect(service.deleteProduct(999)).rejects.toThrow(
-        NotFoundException,
-      );
+      await expect(
+        service.deleteProduct({ id: 999, sellerId: 'seller-123' }),
+      ).rejects.toThrow(NotFoundException);
     });
   });
 
@@ -395,7 +424,10 @@ describe('ProductsService', () => {
         isActive: false,
       });
 
-      const result = await service.toggleProductActive(1, 'seller-123');
+      const result = await service.toggleProductActive({
+        id: 1,
+        sellerId: 'seller-123',
+      });
 
       expect(result.isActive).toBe(false);
     });
@@ -404,7 +436,7 @@ describe('ProductsService', () => {
       mockPrismaService.product.findUnique.mockResolvedValue(mockProduct);
 
       await expect(
-        service.toggleProductActive(1, 'wrong-seller'),
+        service.toggleProductActive({ id: 1, sellerId: 'wrong-seller' }),
       ).rejects.toThrow(ForbiddenException);
     });
   });

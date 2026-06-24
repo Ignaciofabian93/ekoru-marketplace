@@ -74,6 +74,9 @@ export interface GraphQLContext {
   // Optional: Authenticated seller ID (from x-seller-id header)
   sellerId?: string;
 
+  // Optional: Authenticated admin ID (from x-admin-id header)
+  adminId?: string;
+
   // Optional: Auth token
   token?: string;
 }

@@ -10,7 +10,7 @@ import {
   Parent,
 } from '@nestjs/graphql';
 import { Logger } from '@nestjs/common';
-import { CurrentSeller } from '../common/decorators';
+import { CurrentSeller, CurrentAdmin } from '../common/decorators';
 import { ProductCategoryEntity } from '../catalog-v2/entities';
 import { ProductEntity, SellerEntity } from './entities/product.entity';
 import { ProductConnectionEntity } from './entities/product-connection.entity';
@@ -47,7 +47,7 @@ export class ProductsResolver {
     @Args('sort', { type: () => ProductSortInput, nullable: true })
     sort?: ProductSortInput,
   ) {
-    return this.productsService.getProducts(page, pageSize, filter, sort);
+    return this.productsService.getProducts({ page, pageSize, filter, sort });
   }
 
   @Query(() => ProductConnectionEntity, {
@@ -63,13 +63,13 @@ export class ProductsResolver {
     @Args('sort', { type: () => ProductSortInput, nullable: true })
     sort?: ProductSortInput,
   ) {
-    return this.productsService.getProductsBySeller(
+    return this.productsService.getProductsBySeller({
       sellerId,
       page,
       pageSize,
       filter,
       sort,
-    );
+    });
   }
 
   @Query(() => ProductConnectionEntity, {
@@ -85,13 +85,13 @@ export class ProductsResolver {
     @Args('sort', { type: () => ProductSortInput, nullable: true })
     sort?: ProductSortInput,
   ) {
-    return this.productsService.getProductsByCategory(
-      Number(productCategoryId),
+    return this.productsService.getProductsByCategory({
+      productCategoryId: Number(productCategoryId),
       page,
       pageSize,
       filter,
       sort,
-    );
+    });
   }
 
   /**
@@ -113,13 +113,13 @@ export class ProductsResolver {
     @Args('sort', { type: () => ProductSortInput, nullable: true })
     sort?: ProductSortInput,
   ) {
-    return this.productsService.getProductsByDepartmentCategory(
-      Number(departmentCategoryId),
+    return this.productsService.getProductsByDepartmentCategory({
+      departmentCategoryId: Number(departmentCategoryId),
       page,
       pageSize,
       filter,
       sort,
-    );
+    });
   }
 
   /**
@@ -140,13 +140,13 @@ export class ProductsResolver {
     @Args('sort', { type: () => ProductSortInput, nullable: true })
     sort?: ProductSortInput,
   ) {
-    return this.productsService.getProductsByDepartment(
-      Number(departmentId),
+    return this.productsService.getProductsByDepartment({
+      departmentId: Number(departmentId),
       page,
       pageSize,
       filter,
       sort,
-    );
+    });
   }
 
   @Query(() => ProductConnectionEntity, {
@@ -161,12 +161,12 @@ export class ProductsResolver {
     @Args('sort', { type: () => ProductSortInput, nullable: true })
     sort?: ProductSortInput,
   ) {
-    return this.productsService.getExchangeableProducts(
+    return this.productsService.getExchangeableProducts({
       page,
       pageSize,
       filter,
       sort,
-    );
+    });
   }
 
   @Mutation(() => ProductEntity, { nullable: true, name: 'addProduct' })
@@ -174,20 +174,29 @@ export class ProductsResolver {
     @Args('input') input: AddProductInput,
     @CurrentSeller() sellerId?: string,
   ) {
-    return this.productsService.addProduct(input, sellerId);
+    return this.productsService.addProduct({ input, sellerId });
   }
 
   @Mutation(() => ProductEntity, { nullable: true, name: 'updateProduct' })
   async updateProduct(
     @Args('input') input: UpdateProductInput,
     @CurrentSeller() sellerId?: string,
+    @CurrentAdmin() adminId?: string,
   ) {
-    return this.productsService.updateProduct(input, sellerId);
+    return this.productsService.updateProduct({ input, sellerId, adminId });
   }
 
   @Mutation(() => ProductEntity, { nullable: true, name: 'deleteProduct' })
-  async deleteProduct(@Args('id', { type: () => ID }) id: string) {
-    return this.productsService.deleteProduct(Number(id));
+  async deleteProduct(
+    @Args('id', { type: () => ID }) id: string,
+    @CurrentSeller() sellerId?: string,
+    @CurrentAdmin() adminId?: string,
+  ) {
+    return this.productsService.deleteProduct({
+      id: Number(id),
+      sellerId,
+      adminId,
+    });
   }
 
   @Mutation(() => ProductEntity, {
@@ -197,8 +206,13 @@ export class ProductsResolver {
   async toggleProductActive(
     @Args('id', { type: () => ID }) id: string,
     @CurrentSeller() sellerId?: string,
+    @CurrentAdmin() adminId?: string,
   ) {
-    return this.productsService.toggleProductActive(Number(id), sellerId);
+    return this.productsService.toggleProductActive({
+      id: Number(id),
+      sellerId,
+      adminId,
+    });
   }
 
   // Field resolvers
