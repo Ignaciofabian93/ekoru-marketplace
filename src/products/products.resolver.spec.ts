@@ -98,12 +98,12 @@ describe('ProductsResolver', () => {
       const result = await resolver.getProducts(1, 10);
 
       expect(result).toEqual(mockPaginatedResult);
-      expect(productsService.getProducts).toHaveBeenCalledWith(
-        1,
-        10,
-        undefined,
-        undefined,
-      );
+      expect(productsService.getProducts).toHaveBeenCalledWith({
+        page: 1,
+        pageSize: 10,
+        filter: undefined,
+        sort: undefined,
+      });
     });
 
     it('should return products with filter and sort', async () => {
@@ -113,12 +113,12 @@ describe('ProductsResolver', () => {
 
       await resolver.getProducts(1, 10, filter, sort);
 
-      expect(productsService.getProducts).toHaveBeenCalledWith(
-        1,
-        10,
+      expect(productsService.getProducts).toHaveBeenCalledWith({
+        page: 1,
+        pageSize: 10,
         filter,
         sort,
-      );
+      });
     });
   });
 
@@ -131,13 +131,13 @@ describe('ProductsResolver', () => {
       const result = await resolver.getProductsBySeller('seller-123', 1, 10);
 
       expect(result).toEqual(mockPaginatedResult);
-      expect(productsService.getProductsBySeller).toHaveBeenCalledWith(
-        'seller-123',
-        1,
-        10,
-        undefined,
-        undefined,
-      );
+      expect(productsService.getProductsBySeller).toHaveBeenCalledWith({
+        sellerId: 'seller-123',
+        page: 1,
+        pageSize: 10,
+        filter: undefined,
+        sort: undefined,
+      });
     });
   });
 
@@ -150,13 +150,13 @@ describe('ProductsResolver', () => {
       const result = await resolver.getProductsByCategory('1', 1, 10);
 
       expect(result).toEqual(mockPaginatedResult);
-      expect(productsService.getProductsByCategory).toHaveBeenCalledWith(
-        1,
-        1,
-        10,
-        undefined,
-        undefined,
-      );
+      expect(productsService.getProductsByCategory).toHaveBeenCalledWith({
+        productCategoryId: 1,
+        page: 1,
+        pageSize: 10,
+        filter: undefined,
+        sort: undefined,
+      });
     });
   });
 
@@ -171,7 +171,13 @@ describe('ProductsResolver', () => {
       expect(result).toEqual(mockPaginatedResult);
       expect(
         productsService.getProductsByDepartmentCategory,
-      ).toHaveBeenCalledWith(1, 1, 10, undefined, undefined);
+      ).toHaveBeenCalledWith({
+        departmentCategoryId: 1,
+        page: 1,
+        pageSize: 10,
+        filter: undefined,
+        sort: undefined,
+      });
     });
   });
 
@@ -184,13 +190,13 @@ describe('ProductsResolver', () => {
       const result = await resolver.getProductsByDepartment('1', 1, 10);
 
       expect(result).toEqual(mockPaginatedResult);
-      expect(productsService.getProductsByDepartment).toHaveBeenCalledWith(
-        1,
-        1,
-        10,
-        undefined,
-        undefined,
-      );
+      expect(productsService.getProductsByDepartment).toHaveBeenCalledWith({
+        departmentId: 1,
+        page: 1,
+        pageSize: 10,
+        filter: undefined,
+        sort: undefined,
+      });
     });
   });
 
@@ -203,12 +209,12 @@ describe('ProductsResolver', () => {
       const result = await resolver.getExchangeableProducts(1, 10);
 
       expect(result).toEqual(mockPaginatedResult);
-      expect(productsService.getExchangeableProducts).toHaveBeenCalledWith(
-        1,
-        10,
-        undefined,
-        undefined,
-      );
+      expect(productsService.getExchangeableProducts).toHaveBeenCalledWith({
+        page: 1,
+        pageSize: 10,
+        filter: undefined,
+        sort: undefined,
+      });
     });
   });
 
@@ -229,10 +235,10 @@ describe('ProductsResolver', () => {
       const result = await resolver.addProduct(input, 'seller-123');
 
       expect(result).toEqual(mockProduct);
-      expect(productsService.addProduct).toHaveBeenCalledWith(
+      expect(productsService.addProduct).toHaveBeenCalledWith({
         input,
-        'seller-123',
-      );
+        sellerId: 'seller-123',
+      });
     });
   });
 
@@ -249,10 +255,11 @@ describe('ProductsResolver', () => {
       const result = await resolver.updateProduct(input, 'seller-123');
 
       expect(result).toEqual(updatedProduct);
-      expect(productsService.updateProduct).toHaveBeenCalledWith(
+      expect(productsService.updateProduct).toHaveBeenCalledWith({
         input,
-        'seller-123',
-      );
+        sellerId: 'seller-123',
+        adminId: undefined,
+      });
     });
   });
 
@@ -263,7 +270,11 @@ describe('ProductsResolver', () => {
       const result = await resolver.deleteProduct('1');
 
       expect(result).toEqual(mockProduct);
-      expect(productsService.deleteProduct).toHaveBeenCalledWith(1);
+      expect(productsService.deleteProduct).toHaveBeenCalledWith({
+        id: 1,
+        sellerId: undefined,
+        adminId: undefined,
+      });
     });
   });
 
@@ -277,10 +288,11 @@ describe('ProductsResolver', () => {
       const result = await resolver.toggleProductActive('1', 'seller-123');
 
       expect(result).toEqual(inactiveProduct);
-      expect(productsService.toggleProductActive).toHaveBeenCalledWith(
-        1,
-        'seller-123',
-      );
+      expect(productsService.toggleProductActive).toHaveBeenCalledWith({
+        id: 1,
+        sellerId: 'seller-123',
+        adminId: undefined,
+      });
     });
   });
 
