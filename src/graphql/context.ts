@@ -1,3 +1,4 @@
+import DataLoader from 'dataloader';
 import { Request, Response } from 'express';
 import { ModuleRef } from '@nestjs/core';
 import { PrismaService } from '../prisma/prisma.service';
@@ -54,6 +55,18 @@ export function createGraphQLContext(
       productCategoryRepository.createTranslationLoader(),
     productCategoriesByCategory:
       productCategoryRepository.createProductCategoryByCategoryLoader(),
+
+    // Batches "is this product favorited by the current seller?" lookups so
+    // catalog grids resolve `isLiked` without an N+1. Anonymous → all false.
+    productLikedByMe: new DataLoader<number, boolean>(async (productIds) => {
+      if (!sellerId) return productIds.map(() => false);
+      const likes = await prisma.marketplaceProductLike.findMany({
+        where: { sellerId, productId: { in: [...productIds] } },
+        select: { productId: true },
+      });
+      const liked = new Set(likes.map((l) => l.productId));
+      return productIds.map((id) => liked.has(id));
+    }),
   };
 
   return {

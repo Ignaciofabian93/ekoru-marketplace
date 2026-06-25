@@ -501,6 +501,89 @@ export class ProductsService {
   }
 
   /**
+   * Toggle the current seller's favorite mark on a product. Idempotent per
+   * (product, seller): a second call removes the favorite. Returns the product
+   * so the resolver can re-resolve `isLiked` for the caller. Favoriting requires
+   * authentication.
+   */
+  async toggleProductLike({
+    productId,
+    sellerId,
+  }: {
+    productId: number;
+    sellerId?: string;
+  }) {
+    if (!sellerId) {
+      throw new UnauthorizedException('Authentication required');
+    }
+
+    const product = await this.prisma.product.findUnique({
+      where: { id: productId },
+      include: { productCategory: true },
+    });
+
+    if (!product || product.deletedAt) {
+      throw new NotFoundException(`Product with ID ${productId} not found`);
+    }
+
+    const existing = await this.prisma.marketplaceProductLike.findUnique({
+      where: { productId_sellerId: { productId, sellerId } },
+      select: { id: true },
+    });
+
+    if (existing) {
+      await this.prisma.marketplaceProductLike.delete({
+        where: { id: existing.id },
+      });
+    } else {
+      await this.prisma.marketplaceProductLike.create({
+        data: { productId, sellerId },
+      });
+    }
+
+    return product;
+  }
+
+  /**
+   * Paginated list of the current seller's favorite products. Soft-deleted or
+   * inactive products are excluded so "unavailable" favorites drop off
+   * automatically. Most-recently favorited first.
+   */
+  async getMyFavorites({
+    sellerId,
+    page,
+    pageSize,
+  }: {
+    sellerId?: string;
+    page: number;
+    pageSize: number;
+  }) {
+    if (!sellerId) {
+      throw new UnauthorizedException('Authentication required');
+    }
+
+    const skip = (page - 1) * pageSize;
+    const where = {
+      sellerId,
+      product: { isActive: true, deletedAt: null },
+    };
+
+    const [likes, totalCount] = await Promise.all([
+      this.prisma.marketplaceProductLike.findMany({
+        where,
+        orderBy: { createdAt: 'desc' },
+        skip,
+        take: pageSize,
+        include: { product: { include: { productCategory: true } } },
+      }),
+      this.prisma.marketplaceProductLike.count({ where }),
+    ]);
+
+    const products = likes.map((like) => like.product);
+    return this.createPaginatedResponse(products, totalCount, page, pageSize);
+  }
+
+  /**
    * Build Prisma orderBy clause from sort input
    */
   private buildOrderBy(

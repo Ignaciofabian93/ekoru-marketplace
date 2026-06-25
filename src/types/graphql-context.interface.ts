@@ -69,6 +69,9 @@ export interface GraphQLContext {
       ProductCategoryTranslation | null
     >;
     productCategoriesByCategory: DataLoader<number, ProductCategory[]>;
+
+    // Whether the current seller has favorited a product (keyed by productId).
+    productLikedByMe: DataLoader<number, boolean>;
   };
 
   // Optional: Authenticated seller ID (from x-seller-id header)

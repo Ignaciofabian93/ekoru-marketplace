@@ -8,9 +8,11 @@ import {
   ResolveField,
   ResolveReference,
   Parent,
+  Context,
 } from '@nestjs/graphql';
 import { Logger } from '@nestjs/common';
 import { CurrentSeller, CurrentAdmin } from '../common/decorators';
+import type { GraphQLContext } from '../types';
 import { ProductCategoryEntity } from '../catalog-v2/entities';
 import { ProductEntity, SellerEntity } from './entities/product.entity';
 import { ProductConnectionEntity } from './entities/product-connection.entity';
@@ -215,7 +217,41 @@ export class ProductsResolver {
     });
   }
 
+  @Query(() => ProductConnectionEntity, {
+    nullable: true,
+    name: 'getMyFavorites',
+    description: "The current seller's favorited products (paginated).",
+  })
+  async getMyFavorites(
+    @CurrentSeller() sellerId: string,
+    @Args('page', { type: () => Int, defaultValue: 1 }) page: number,
+    @Args('pageSize', { type: () => Int, defaultValue: 12 }) pageSize: number,
+  ) {
+    return this.productsService.getMyFavorites({ sellerId, page, pageSize });
+  }
+
+  @Mutation(() => ProductEntity, { nullable: true, name: 'toggleProductLike' })
+  async toggleProductLike(
+    @Args('productId', { type: () => ID }) productId: string,
+    @CurrentSeller() sellerId?: string,
+  ) {
+    return this.productsService.toggleProductLike({
+      productId: Number(productId),
+      sellerId,
+    });
+  }
+
   // Field resolvers
+  @ResolveField(() => Boolean, {
+    description: 'Whether the current seller has favorited this product',
+  })
+  async isLiked(
+    @Parent() product: ProductEntity,
+    @Context() ctx: GraphQLContext,
+  ): Promise<boolean> {
+    return ctx.loaders.productLikedByMe.load(product.id);
+  }
+
   @ResolveField(() => ProductCategoryEntity, { nullable: true })
   productCategory(@Parent() product: ProductEntity) {
     if (product.productCategory) {

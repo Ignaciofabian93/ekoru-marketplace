@@ -251,6 +251,7 @@ model Product {
   featuredUntil        DateTime?
   advertisement        Advertisement[]
   chat                 Chat[]
+  likes                MarketplaceProductLike[]
   productCategory      ProductCategory  @relation(fields: [productCategoryId], references: [id])
 
   @@index([createdAt(sort: Desc)])
@@ -392,5 +393,19 @@ model Advertisement {
   @@index([productId])
   @@index([storeProductId])
   @@index([serviceId])
+}
+
+model MarketplaceProductLike {
+  id        Int      @id @default(autoincrement())
+  sellerId  String
+  productId Int
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@unique([productId, sellerId])
+  @@index([productId])
+  @@index([sellerId])
+  @@index([createdAt(sort: Desc)])
 }
 
