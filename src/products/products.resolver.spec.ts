@@ -348,10 +348,16 @@ describe('ProductsResolver', () => {
 
         mockImpactService.calculateCategoryImpact.mockResolvedValue(impactData);
 
-        const result = await resolver.environmentalImpact(mockProduct as any);
+        const result = await resolver.environmentalImpact(
+          mockProduct as any,
+          { language: 'EN' } as any,
+        );
 
         expect(result).toEqual(impactData);
-        expect(impactService.calculateCategoryImpact).toHaveBeenCalledWith(1);
+        expect(impactService.calculateCategoryImpact).toHaveBeenCalledWith(
+          1,
+          'EN',
+        );
       });
 
       it('should return null on error', async () => {
@@ -359,7 +365,10 @@ describe('ProductsResolver', () => {
           new Error('Test error'),
         );
 
-        const result = await resolver.environmentalImpact(mockProduct as any);
+        const result = await resolver.environmentalImpact(
+          mockProduct as any,
+          { language: 'EN' } as any,
+        );
 
         expect(result).toBeNull();
       });

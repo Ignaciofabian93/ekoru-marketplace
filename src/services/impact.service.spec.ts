@@ -63,6 +63,7 @@ describe('ImpactService', () => {
         materialBreakdown: [
           {
             materialType: 'Plastic',
+            materialTypeLabel: 'Plastic', // humanized fallback (no translation)
             quantity: 80,
             unit: 'percentage',
             co2SavingsKG: 4.4,
@@ -70,7 +71,57 @@ describe('ImpactService', () => {
           },
         ],
       });
-      expect(repository.getProductCategoryMaterials).toHaveBeenCalledWith(1);
+      expect(repository.getProductCategoryMaterials).toHaveBeenCalledWith(
+        1,
+        undefined,
+      );
+    });
+
+    it('should use the localized translation for the requested language', async () => {
+      const translatedMaterial = {
+        ...mockCategoryMaterial,
+        material: {
+          ...mockMaterialImpact,
+          materialType: 'PLASTIC',
+          translations: [
+            { language: 'ES', materialTypeTranslation: 'Plástico' },
+          ],
+        },
+      };
+      mockRepository.getProductCategoryMaterials.mockResolvedValue([
+        translatedMaterial,
+      ]);
+
+      const result = await service.calculateCategoryImpact(1, 'ES' as never);
+
+      expect(result?.materialBreakdown[0]).toMatchObject({
+        materialType: 'PLASTIC',
+        materialTypeLabel: 'Plástico',
+      });
+      expect(repository.getProductCategoryMaterials).toHaveBeenCalledWith(
+        1,
+        'ES',
+      );
+    });
+
+    it('should humanize SCREAMING_SNAKE_CASE keys when no translation exists', async () => {
+      const snakeMaterial = {
+        ...mockCategoryMaterial,
+        material: {
+          ...mockMaterialImpact,
+          materialType: 'ELECTRONIC_COMPONENTS',
+          translations: [],
+        },
+      };
+      mockRepository.getProductCategoryMaterials.mockResolvedValue([
+        snakeMaterial,
+      ]);
+
+      const result = await service.calculateCategoryImpact(1, 'EN' as never);
+
+      expect(result?.materialBreakdown[0].materialTypeLabel).toBe(
+        'Electronic components',
+      );
     });
 
     it('should calculate impact for multiple materials', async () => {

@@ -1,9 +1,21 @@
 import { Injectable, Logger } from '@nestjs/common';
+import type { Language } from '@prisma/client';
 import { ImpactRepository } from '../repositories/impact.repository';
 import {
   EnvironmentalImpactEntity,
   MaterialBreakdown,
 } from '../products/entities/environmental-impact.entity';
+
+/**
+ * Turns a raw material key like "ELECTRONIC_COMPONENTS" into a render-ready
+ * "Electronic components". Used as a fallback when no translation row exists,
+ * so the frontend never has to display a SCREAMING_SNAKE_CASE enum.
+ */
+function humanizeMaterialType(value: string): string {
+  const normalized = value.replace(/_/g, ' ').trim().toLowerCase();
+  if (!normalized) return value;
+  return normalized.charAt(0).toUpperCase() + normalized.slice(1);
+}
 
 /**
  * Impact Service
@@ -25,12 +37,15 @@ export class ImpactService {
    */
   async calculateCategoryImpact(
     productCategoryId: number,
+    language?: Language,
   ): Promise<EnvironmentalImpactEntity | null> {
     try {
-      // Get all materials for this product category
+      // Get all materials for this product category (translations filtered to
+      // `language` when supplied, so we can resolve a localized name below).
       const categoryMaterials =
         await this.impactRepository.getProductCategoryMaterials(
           productCategoryId,
+          language,
         );
 
       if (!categoryMaterials || categoryMaterials.length === 0) {
@@ -67,8 +82,25 @@ export class ImpactService {
         totalCo2SavingsKG += co2Savings;
         totalWaterSavingsLT += waterSavings;
 
+        // Prefer the localized name for the request language; fall back to a
+        // humanized form of the raw key so the FE never renders "PLASTIC".
+        const translations = (
+          material as {
+            translations?: {
+              language: Language;
+              materialTypeTranslation: string;
+            }[];
+          }
+        ).translations;
+        const translated = language
+          ? translations?.find((t) => t.language === language)
+              ?.materialTypeTranslation
+          : undefined;
+
         materialBreakdown.push({
           materialType: material.materialType,
+          materialTypeLabel:
+            translated ?? humanizeMaterialType(material.materialType),
           quantity: categoryMaterial.quantity,
           unit: categoryMaterial.unit,
           co2SavingsKG: co2Savings,

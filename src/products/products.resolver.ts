@@ -270,10 +270,14 @@ export class ProductsResolver {
   }
 
   @ResolveField(() => EnvironmentalImpactEntity, { nullable: true })
-  async environmentalImpact(@Parent() product: ProductEntity) {
+  async environmentalImpact(
+    @Parent() product: ProductEntity,
+    @Context() ctx: GraphQLContext,
+  ) {
     try {
       return await this.impactService.calculateCategoryImpact(
         product.productCategoryId,
+        ctx.language,
       );
     } catch (error) {
       this.logger.error('Error calculating environmental impact:', error);

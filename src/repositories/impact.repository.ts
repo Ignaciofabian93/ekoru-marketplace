@@ -1,4 +1,5 @@
 import { Injectable } from '@nestjs/common';
+import type { Language } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
 
 /**
@@ -12,15 +13,26 @@ export class ImpactRepository {
   constructor(private readonly prisma: PrismaService) {}
 
   /**
-   * Get all materials and their impact data for a product category
+   * Get all materials and their impact data for a product category.
+   *
+   * When `language` is provided, each material's translations are filtered to
+   * that language so the caller can resolve a localized material name without
+   * an extra round-trip.
    */
-  async getProductCategoryMaterials(productCategoryId: number) {
+  async getProductCategoryMaterials(
+    productCategoryId: number,
+    language?: Language,
+  ) {
     return this.prisma.productCategoryMaterial.findMany({
       where: {
         productCategoryId,
       },
       include: {
-        material: true,
+        material: {
+          include: {
+            translations: language ? { where: { language } } : true,
+          },
+        },
       },
     });
   }

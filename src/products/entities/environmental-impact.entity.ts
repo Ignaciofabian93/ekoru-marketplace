@@ -31,8 +31,19 @@ export class EnvironmentalImpactEntity {
 @ObjectType('MaterialBreakdown')
 @Directive('@shareable')
 export class MaterialBreakdown {
-  @Field(() => String, { description: 'Material type name' })
+  @Field(() => String, {
+    description:
+      'Raw material type key (e.g. "PLASTIC", "ELECTRONIC_COMPONENTS"). ' +
+      'Stable identifier — use it for icons/logic, render `materialTypeLabel`.',
+  })
   materialType!: string;
+
+  @Field(() => String, {
+    description:
+      'Localized, render-ready material name for the request language ' +
+      '(falls back to a humanized form of materialType when no translation exists).',
+  })
+  materialTypeLabel!: string;
 
   @Field(() => Float, { description: 'Quantity of this material' })
   quantity!: number;
