@@ -29,6 +29,9 @@ describe('ImpactRepository', () => {
     productCategoryMaterial: {
       findMany: jest.fn(),
     },
+    productCategory: {
+      findUnique: jest.fn(),
+    },
     materialImpactEstimate: {
       findUnique: jest.fn(),
     },
@@ -84,6 +87,36 @@ describe('ImpactRepository', () => {
       const result = await repository.getProductCategoryMaterials(999);
 
       expect(result).toEqual([]);
+    });
+  });
+
+  describe('getProductCategoryWeight', () => {
+    it('should return the average weight and unit for a category', async () => {
+      mockPrismaService.productCategory.findUnique.mockResolvedValue({
+        averageWeight: 30,
+        weightUnit: 'KG',
+      });
+
+      const result = await repository.getProductCategoryWeight(1);
+
+      expect(result).toEqual({ averageWeight: 30, weightUnit: 'KG' });
+      expect(prismaService.productCategory.findUnique).toHaveBeenCalledWith({
+        where: {
+          id: 1,
+        },
+        select: {
+          averageWeight: true,
+          weightUnit: true,
+        },
+      });
+    });
+
+    it('should return null when the category is not found', async () => {
+      mockPrismaService.productCategory.findUnique.mockResolvedValue(null);
+
+      const result = await repository.getProductCategoryWeight(999);
+
+      expect(result).toBeNull();
     });
   });
 

@@ -1,5 +1,5 @@
 import { Injectable, Logger } from '@nestjs/common';
-import type { Language } from '@prisma/client';
+import type { Language, WeightUnit } from '@prisma/client';
 import { ImpactRepository } from '../repositories/impact.repository';
 import {
   EnvironmentalImpactEntity,
@@ -16,6 +16,18 @@ function humanizeMaterialType(value: string): string {
   if (!normalized) return value;
   return normalized.charAt(0).toUpperCase() + normalized.slice(1);
 }
+
+/**
+ * Conversion factors to normalize a category's average weight into kilograms.
+ * Material impact estimates are stored per kg, so every weight must be in kg
+ * before it can scale them.
+ */
+const WEIGHT_TO_KG: Record<WeightUnit, number> = {
+  KG: 1,
+  G: 0.001,
+  LB: 0.45359237,
+  OZ: 0.028349523125,
+};
 
 /**
  * Impact Service
@@ -41,12 +53,15 @@ export class ImpactService {
   ): Promise<EnvironmentalImpactEntity | null> {
     try {
       // Get all materials for this product category (translations filtered to
-      // `language` when supplied, so we can resolve a localized name below).
-      const categoryMaterials =
-        await this.impactRepository.getProductCategoryMaterials(
+      // `language` when supplied, so we can resolve a localized name below)
+      // plus the category's average weight, used to scale the per-kg estimates.
+      const [categoryMaterials, categoryWeight] = await Promise.all([
+        this.impactRepository.getProductCategoryMaterials(
           productCategoryId,
           language,
-        );
+        ),
+        this.impactRepository.getProductCategoryWeight(productCategoryId),
+      ]);
 
       if (!categoryMaterials || categoryMaterials.length === 0) {
         this.logger.debug(
@@ -54,6 +69,13 @@ export class ImpactService {
         );
         return null;
       }
+
+      // Normalize the category's average weight to kilograms. Each material's
+      // share of that weight is what the per-kg estimates get multiplied by.
+      const categoryWeightKG = this.resolveCategoryWeightKG(
+        categoryWeight,
+        productCategoryId,
+      );
 
       let totalCo2SavingsKG = 0;
       let totalWaterSavingsLT = 0;
@@ -71,13 +93,17 @@ export class ImpactService {
         const material = categoryMaterial.material;
         const quantity = categoryMaterial.quantity;
 
-        // Calculate impact based on quantity
-        // Assuming the estimates are per unit (e.g., per kg or per 100%)
-        const multiplier =
-          categoryMaterial.unit === 'percentage' ? quantity / 100 : quantity;
+        // How much of the category's weight this material accounts for, in kg.
+        // For a percentage split it's a fraction of the total weight; for an
+        // absolute quantity it's taken as kilograms directly.
+        const materialKG =
+          categoryMaterial.unit === 'percentage'
+            ? (quantity / 100) * categoryWeightKG
+            : quantity;
 
-        const co2Savings = material.estimatedCo2SavingsKG * multiplier;
-        const waterSavings = material.estimatedWaterSavingsLT * multiplier;
+        // Estimates are per kilogram, so scale them by this material's mass.
+        const co2Savings = material.estimatedCo2SavingsKG * materialKG;
+        const waterSavings = material.estimatedWaterSavingsLT * materialKG;
 
         totalCo2SavingsKG += co2Savings;
         totalWaterSavingsLT += waterSavings;
@@ -120,5 +146,33 @@ export class ImpactService {
       );
       return null;
     }
+  }
+
+  /**
+   * Resolve a category's average weight to kilograms.
+   *
+   * When no weight is configured (null or <= 0) we fall back to 1kg and warn,
+   * so percentage-based categories still report their per-kg estimates instead
+   * of silently collapsing to zero impact until a weight is set.
+   */
+  private resolveCategoryWeightKG(
+    categoryWeight: {
+      averageWeight: number | null;
+      weightUnit: WeightUnit | null;
+    } | null,
+    productCategoryId: number,
+  ): number {
+    const averageWeight = categoryWeight?.averageWeight ?? 0;
+
+    if (averageWeight <= 0) {
+      this.logger.warn(
+        `Category ${productCategoryId} has no averageWeight configured; ` +
+          `defaulting to 1kg so impact reflects per-kg estimates.`,
+      );
+      return 1;
+    }
+
+    const unit = categoryWeight?.weightUnit ?? 'KG';
+    return averageWeight * WEIGHT_TO_KG[unit];
   }
 }

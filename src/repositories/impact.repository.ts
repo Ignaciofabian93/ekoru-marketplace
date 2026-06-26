@@ -38,6 +38,24 @@ export class ImpactRepository {
   }
 
   /**
+   * Get the average weight (and its unit) configured for a product category.
+   *
+   * Material impact estimates are stored *per kilogram*, so the caller needs
+   * the product's typical mass to scale them into a real-world total.
+   */
+  async getProductCategoryWeight(productCategoryId: number) {
+    return this.prisma.productCategory.findUnique({
+      where: {
+        id: productCategoryId,
+      },
+      select: {
+        averageWeight: true,
+        weightUnit: true,
+      },
+    });
+  }
+
+  /**
    * Get material impact estimate by ID
    */
   async getMaterialImpactById(materialTypeId: number) {
