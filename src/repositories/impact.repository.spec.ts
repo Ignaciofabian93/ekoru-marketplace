@@ -69,7 +69,11 @@ describe('ImpactRepository', () => {
           productCategoryId: 1,
         },
         include: {
-          material: true,
+          material: {
+            include: {
+              translations: true,
+            },
+          },
         },
       });
     });
