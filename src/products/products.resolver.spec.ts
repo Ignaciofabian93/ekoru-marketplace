@@ -103,6 +103,7 @@ describe('ProductsResolver', () => {
         pageSize: 10,
         filter: undefined,
         sort: undefined,
+        excludeSellerId: undefined,
       });
     });
 
@@ -111,13 +112,28 @@ describe('ProductsResolver', () => {
       const sort = { field: 'price', order: 'asc' as const };
       mockProductsService.getProducts.mockResolvedValue(mockPaginatedResult);
 
-      await resolver.getProducts(1, 10, filter, sort);
+      await resolver.getProducts(1, 10, undefined, filter, sort);
 
       expect(productsService.getProducts).toHaveBeenCalledWith({
         page: 1,
         pageSize: 10,
         filter,
         sort,
+        excludeSellerId: undefined,
+      });
+    });
+
+    it("should exclude the current seller's own products when logged in", async () => {
+      mockProductsService.getProducts.mockResolvedValue(mockPaginatedResult);
+
+      await resolver.getProducts(1, 10, 'seller-123');
+
+      expect(productsService.getProducts).toHaveBeenCalledWith({
+        page: 1,
+        pageSize: 10,
+        filter: undefined,
+        sort: undefined,
+        excludeSellerId: 'seller-123',
       });
     });
   });
@@ -156,6 +172,7 @@ describe('ProductsResolver', () => {
         pageSize: 10,
         filter: undefined,
         sort: undefined,
+        excludeSellerId: undefined,
       });
     });
   });
@@ -177,6 +194,7 @@ describe('ProductsResolver', () => {
         pageSize: 10,
         filter: undefined,
         sort: undefined,
+        excludeSellerId: undefined,
       });
     });
   });
@@ -196,6 +214,7 @@ describe('ProductsResolver', () => {
         pageSize: 10,
         filter: undefined,
         sort: undefined,
+        excludeSellerId: undefined,
       });
     });
   });
@@ -214,6 +233,7 @@ describe('ProductsResolver', () => {
         pageSize: 10,
         filter: undefined,
         sort: undefined,
+        excludeSellerId: undefined,
       });
     });
   });

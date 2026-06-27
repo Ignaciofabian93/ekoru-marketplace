@@ -44,12 +44,19 @@ export class ProductsResolver {
   async getProducts(
     @Args('page', { type: () => Int, defaultValue: 1 }) page: number,
     @Args('pageSize', { type: () => Int, defaultValue: 10 }) pageSize: number,
+    @CurrentSeller() currentSellerId?: string,
     @Args('filter', { type: () => ProductFilterInput, nullable: true })
     filter?: ProductFilterInput,
     @Args('sort', { type: () => ProductSortInput, nullable: true })
     sort?: ProductSortInput,
   ) {
-    return this.productsService.getProducts({ page, pageSize, filter, sort });
+    return this.productsService.getProducts({
+      page,
+      pageSize,
+      filter,
+      sort,
+      excludeSellerId: currentSellerId,
+    });
   }
 
   @Query(() => ProductConnectionEntity, {
@@ -82,6 +89,7 @@ export class ProductsResolver {
     @Args('productCategoryId', { type: () => ID }) productCategoryId: string,
     @Args('page', { type: () => Int, defaultValue: 1 }) page: number,
     @Args('pageSize', { type: () => Int, defaultValue: 10 }) pageSize: number,
+    @CurrentSeller() currentSellerId?: string,
     @Args('filter', { type: () => ProductFilterInput, nullable: true })
     filter?: ProductFilterInput,
     @Args('sort', { type: () => ProductSortInput, nullable: true })
@@ -93,6 +101,7 @@ export class ProductsResolver {
       pageSize,
       filter,
       sort,
+      excludeSellerId: currentSellerId,
     });
   }
 
@@ -110,6 +119,7 @@ export class ProductsResolver {
     departmentCategoryId: string,
     @Args('page', { type: () => Int, defaultValue: 1 }) page: number,
     @Args('pageSize', { type: () => Int, defaultValue: 10 }) pageSize: number,
+    @CurrentSeller() currentSellerId?: string,
     @Args('filter', { type: () => ProductFilterInput, nullable: true })
     filter?: ProductFilterInput,
     @Args('sort', { type: () => ProductSortInput, nullable: true })
@@ -121,6 +131,7 @@ export class ProductsResolver {
       pageSize,
       filter,
       sort,
+      excludeSellerId: currentSellerId,
     });
   }
 
@@ -137,6 +148,7 @@ export class ProductsResolver {
     @Args('departmentId', { type: () => ID }) departmentId: string,
     @Args('page', { type: () => Int, defaultValue: 1 }) page: number,
     @Args('pageSize', { type: () => Int, defaultValue: 10 }) pageSize: number,
+    @CurrentSeller() currentSellerId?: string,
     @Args('filter', { type: () => ProductFilterInput, nullable: true })
     filter?: ProductFilterInput,
     @Args('sort', { type: () => ProductSortInput, nullable: true })
@@ -148,6 +160,7 @@ export class ProductsResolver {
       pageSize,
       filter,
       sort,
+      excludeSellerId: currentSellerId,
     });
   }
 
@@ -158,6 +171,7 @@ export class ProductsResolver {
   async getExchangeableProducts(
     @Args('page', { type: () => Int, defaultValue: 1 }) page: number,
     @Args('pageSize', { type: () => Int, defaultValue: 10 }) pageSize: number,
+    @CurrentSeller() currentSellerId?: string,
     @Args('filter', { type: () => ProductFilterInput, nullable: true })
     filter?: ProductFilterInput,
     @Args('sort', { type: () => ProductSortInput, nullable: true })
@@ -168,6 +182,7 @@ export class ProductsResolver {
       pageSize,
       filter,
       sort,
+      excludeSellerId: currentSellerId,
     });
   }
 

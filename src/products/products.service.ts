@@ -46,14 +46,16 @@ export class ProductsService {
     pageSize,
     filter,
     sort,
+    excludeSellerId,
   }: {
     page: number;
     pageSize: number;
     filter?: ProductFilterInput;
     sort?: ProductSortInput;
+    excludeSellerId?: string;
   }) {
     const skip = (page - 1) * pageSize;
-    const where = this.buildWhereClause(filter);
+    const where = this.buildWhereClause(filter, excludeSellerId);
     const orderBy = this.buildOrderBy(sort);
 
     const [products, totalCount] = await Promise.all([
@@ -121,16 +123,18 @@ export class ProductsService {
     pageSize,
     filter,
     sort,
+    excludeSellerId,
   }: {
     productCategoryId: number;
     page: number;
     pageSize: number;
     filter?: ProductFilterInput;
     sort?: ProductSortInput;
+    excludeSellerId?: string;
   }) {
     const skip = (page - 1) * pageSize;
     const where = {
-      ...this.buildWhereClause(filter),
+      ...this.buildWhereClause(filter, excludeSellerId),
       productCategoryId,
     };
     const orderBy = this.buildOrderBy(sort);
@@ -162,12 +166,14 @@ export class ProductsService {
     pageSize,
     filter,
     sort,
+    excludeSellerId,
   }: {
     departmentCategoryId: number;
     page: number;
     pageSize: number;
     filter?: ProductFilterInput;
     sort?: ProductSortInput;
+    excludeSellerId?: string;
   }) {
     // First, get all product category IDs under this department category
     const productCategories = await this.prisma.productCategory.findMany({
@@ -188,7 +194,7 @@ export class ProductsService {
 
     const skip = (page - 1) * pageSize;
     const where = {
-      ...this.buildWhereClause(filter),
+      ...this.buildWhereClause(filter, excludeSellerId),
       productCategoryId: {
         in: productCategoryIds,
       },
@@ -222,12 +228,14 @@ export class ProductsService {
     pageSize,
     filter,
     sort,
+    excludeSellerId,
   }: {
     departmentId: number;
     page: number;
     pageSize: number;
     filter?: ProductFilterInput;
     sort?: ProductSortInput;
+    excludeSellerId?: string;
   }) {
     // First, get all department category IDs under this department
     const departmentCategories = await this.prisma.departmentCategory.findMany({
@@ -267,7 +275,7 @@ export class ProductsService {
 
     const skip = (page - 1) * pageSize;
     const where = {
-      ...this.buildWhereClause(filter),
+      ...this.buildWhereClause(filter, excludeSellerId),
       productCategoryId: {
         in: productCategoryIds,
       },
@@ -298,15 +306,17 @@ export class ProductsService {
     pageSize,
     filter,
     sort,
+    excludeSellerId,
   }: {
     page: number;
     pageSize: number;
     filter?: ProductFilterInput;
     sort?: ProductSortInput;
+    excludeSellerId?: string;
   }) {
     const skip = (page - 1) * pageSize;
     const where = {
-      ...this.buildWhereClause(filter),
+      ...this.buildWhereClause(filter, excludeSellerId),
       isExchangeable: true,
     };
     const orderBy = this.buildOrderBy(sort);
@@ -627,20 +637,28 @@ export class ProductsService {
     };
   }
   /**
-   * Build Prisma where clause from filter input
+   * Build Prisma where clause from filter input.
+   *
+   * When `excludeSellerId` is provided (the authenticated caller), that seller's
+   * own products are hidden from browsing/search results — they remain visible
+   * to the seller in their profile via getProductsBySeller.
    */
-  private buildWhereClause(filter?: ProductFilterInput) {
-    if (!filter) {
-      return {
-        isActive: true,
-        deletedAt: null,
-      };
-    }
-
+  private buildWhereClause(
+    filter?: ProductFilterInput,
+    excludeSellerId?: string,
+  ): Prisma.ProductWhereInput {
     const where: Prisma.ProductWhereInput = {
       isActive: true,
       deletedAt: null,
     };
+
+    if (excludeSellerId) {
+      where.sellerId = { not: excludeSellerId };
+    }
+
+    if (!filter) {
+      return where;
+    }
 
     if (filter.name) {
       where.name = {
