@@ -93,15 +93,15 @@ enum AdvertisementType {
 // ─── Models ──────────────────────────────────────────────────────────────────────
 
 model Department {
-  id                    Int                     @id @default(autoincrement())
-  isActive              Boolean                 @default(true)
-  sortOrder             Int                     @default(0)
-  featuredFrom          DateTime?
-  featuredUntil         DateTime?
-  createdAt             DateTime                @default(now())
-  updatedAt             DateTime                @updatedAt
-  departmentCategory    DepartmentCategory[]
-  translations          DepartmentTranslation[]
+  id                 Int                     @id @default(autoincrement())
+  isActive           Boolean                 @default(true)
+  sortOrder          Int                     @default(0)
+  featuredFrom       DateTime?
+  featuredUntil      DateTime?
+  createdAt          DateTime                @default(now())
+  updatedAt          DateTime                @updatedAt
+  departmentCategory DepartmentCategory[]
+  translations       DepartmentTranslation[]
 
   @@index([id])
   @@index([isActive, sortOrder])
@@ -228,7 +228,7 @@ model ProductCategoryMaterial {
 }
 
 model Product {
-  id                   Int              @id @default(autoincrement())
+  id                   Int                      @id @default(autoincrement())
   name                 String
   description          String
   color                String?
@@ -238,21 +238,21 @@ model Product {
   productCategoryId    Int
   badges               Badge[]
   interests            String[]
-  condition            ProductCondition @default(NEW)
+  condition            ProductCondition         @default(NEW)
   conditionDescription String?
-  isActive             Boolean          @default(true)
-  isExchangeable       Boolean          @default(false)
+  isActive             Boolean                  @default(true)
+  isExchangeable       Boolean                  @default(false)
   sellerId             String
-  viewCount            Int              @default(0)
-  createdAt            DateTime         @default(now())
-  updatedAt            DateTime         @updatedAt
+  viewCount            Int                      @default(0)
+  createdAt            DateTime                 @default(now())
+  updatedAt            DateTime                 @updatedAt
   deletedAt            DateTime?
   featuredFrom         DateTime?
   featuredUntil        DateTime?
   advertisement        Advertisement[]
   chat                 Chat[]
   likes                MarketplaceProductLike[]
-  productCategory      ProductCategory  @relation(fields: [productCategoryId], references: [id])
+  productCategory      ProductCategory          @relation(fields: [productCategoryId], references: [id])
 
   @@index([createdAt(sort: Desc)])
   @@index([price])
@@ -288,8 +288,8 @@ model Message {
 }
 
 model MaterialImpactEstimate {
-  id                      Int    @id @default(autoincrement())
-  materialType            String @unique
+  id                      Int      @id @default(autoincrement())
+  materialType            String   @unique
   estimatedCo2SavingsKG   Float
   estimatedWaterSavingsLT Float
   createdAt               DateTime @default(now())
