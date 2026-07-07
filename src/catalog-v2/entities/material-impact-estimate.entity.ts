@@ -1,4 +1,4 @@
-import { ObjectType, Field, Int, Float } from '@nestjs/graphql';
+import { ObjectType, Field, Int, Float, Directive } from '@nestjs/graphql';
 
 /**
  * GraphQL MaterialImpactEstimate Entity
@@ -7,6 +7,7 @@ import { ObjectType, Field, Int, Float } from '@nestjs/graphql';
  * Used to calculate CO2 and water savings when products are made from recycled materials.
  */
 @ObjectType('MaterialImpactEstimate')
+@Directive('@shareable')
 export class MaterialImpactEstimateEntity {
   @Field(() => Int, { description: 'Unique identifier' })
   id: number;

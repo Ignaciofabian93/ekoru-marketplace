@@ -295,8 +295,8 @@ model MaterialImpactEstimate {
   createdAt               DateTime @default(now())
   updatedAt               DateTime @updatedAt
 
-  productCategoryMaterials ProductCategoryMaterial[]
-  translations             MaterialImpactEstimateTranslation[]
+  productCategoryMaterials  ProductCategoryMaterial[]
+  translations              MaterialImpactEstimateTranslation[]
 
   @@index([materialType])
 }
