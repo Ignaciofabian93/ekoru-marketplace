@@ -1,6 +1,6 @@
 import { ObjectType, Field, Int, ID, Directive } from '@nestjs/graphql';
 import { Badge, ProductCondition } from '@prisma/client';
-import { ProductCategoryEntity } from '../../catalog-v2/entities/product-category.entity';
+import { ProductCategoryEntity } from '../../productCategories/entities/product-category.entity';
 import { EnvironmentalImpactEntity } from './environmental-impact.entity';
 
 /**

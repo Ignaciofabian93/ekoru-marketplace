@@ -1,0 +1,7 @@
+{
+  "errors.category_not_found": "Categoría con slug '{slug}' no encontrada",
+  "errors.category_not_found_id": "Categoría con id '{id}' no encontrada",
+  "errors.invalid_pagination": "Parámetros de paginación inválidos",
+  "errors.invalid_page": "La página debe ser mayor o igual a 1",
+  "errors.page_size_out_of_range": "El tamaño de página debe estar entre {min} y {max}"
+}

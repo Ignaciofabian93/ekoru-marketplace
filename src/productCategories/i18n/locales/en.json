@@ -1,0 +1,7 @@
+{
+  "errors.product_category_not_found": "Product category with slug '{slug}' not found",
+  "errors.product_category_not_found_id": "Product category with id '{id}' not found",
+  "errors.invalid_pagination": "Invalid pagination parameters",
+  "errors.invalid_page": "Page must be greater than or equal to 1",
+  "errors.page_size_out_of_range": "Page size must be between {min} and {max}"
+}

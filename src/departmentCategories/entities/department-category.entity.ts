@@ -1,6 +1,6 @@
 import { ObjectType, Field, Int } from '@nestjs/graphql';
 import { DepartmentCategoryTranslationEntity } from './department-category-translation.entity';
-import { ProductCategoryEntity } from './product-category.entity';
+import { ProductCategoryEntity } from '../../productCategories/entities';
 
 /**
  * GraphQL DepartmentCategory Entity

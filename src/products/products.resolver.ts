@@ -13,7 +13,7 @@ import {
 import { Logger } from '@nestjs/common';
 import { CurrentSeller, CurrentAdmin } from '../common/decorators';
 import type { GraphQLContext } from '../types';
-import { ProductCategoryEntity } from '../catalog-v2/entities';
+import { ProductCategoryEntity } from '../productCategories/entities';
 import { ProductEntity, SellerEntity } from './entities/product.entity';
 import { ProductConnectionEntity } from './entities/product-connection.entity';
 import { EnvironmentalImpactEntity } from './entities/environmental-impact.entity';

@@ -11,10 +11,10 @@ import type {
   ProductCategory,
   ProductCategoryTranslation,
 } from './product-category';
-import { DepartmentRepository } from '../repositories/department.repository';
-import { CategoryRepository } from '../repositories/category.repository';
-import { ProductCategoryRepository } from '../repositories/product-category.repository';
-import { DepartmentService } from '../services/department.service';
+import { DepartmentRepository } from '../departments/department.repository';
+import { DepartmentCategoryRepository } from '../departmentCategories/department-category.repository';
+import { ProductCategoryRepository } from '../productCategories/product-category.repository';
+import { DepartmentService } from '../departments/department.service';
 
 /**
  * GraphQL Context Interface
@@ -47,7 +47,7 @@ export interface GraphQLContext {
 
   // Repositories (also expose DataLoader helpers)
   departmentRepository: DepartmentRepository;
-  categoryRepository: CategoryRepository;
+  categoryRepository: DepartmentCategoryRepository;
   productCategoryRepository: ProductCategoryRepository;
 
   // DataLoaders - fresh per request

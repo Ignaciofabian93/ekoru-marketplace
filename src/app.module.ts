@@ -11,6 +11,9 @@ import {
 import { ModuleRef } from '@nestjs/core';
 import { PrismaModule } from './prisma/prisma.module';
 import { CatalogV2Module } from './catalog-v2';
+import { DepartmentsModule } from './departments';
+import { DepartmentCategoriesModule } from './departmentCategories';
+import { ProductCategoriesModule } from './productCategories';
 import { ProductsModule } from './products/products.module';
 import { JSONScalar } from './graphql/scalars';
 import { HealthController } from './health/health.controller';
@@ -66,8 +69,17 @@ import { PrometheusModule } from '@willsoto/nestjs-prometheus';
     // Database
     PrismaModule,
 
-    // DataLoader-based catalog with multi-language support
+    // Marketplace catalog (web menu) queries only
     CatalogV2Module,
+
+    // Departments subdomain
+    DepartmentsModule,
+
+    // Department categories subdomain
+    DepartmentCategoriesModule,
+
+    // Product categories subdomain
+    ProductCategoriesModule,
 
     // Products management
     ProductsModule,
