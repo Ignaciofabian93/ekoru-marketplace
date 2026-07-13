@@ -2,10 +2,10 @@ import DataLoader from 'dataloader';
 import { Request, Response } from 'express';
 import { ModuleRef } from '@nestjs/core';
 import { PrismaService } from '../prisma/prisma.service';
-import { DepartmentRepository } from '../repositories/department.repository';
-import { CategoryRepository } from '../repositories/category.repository';
-import { ProductCategoryRepository } from '../repositories/product-category.repository';
-import { DepartmentService } from '../services/department.service';
+import { DepartmentRepository } from '../departments/department.repository';
+import { DepartmentCategoryRepository } from '../departmentCategories/department-category.repository';
+import { ProductCategoryRepository } from '../productCategories/product-category.repository';
+import { DepartmentService } from '../departments/department.service';
 import { I18nService } from '../common/i18n';
 import { GraphQLContext } from '../types';
 
@@ -25,7 +25,7 @@ export function createGraphQLContext(
   const departmentRepository = moduleRef.get(DepartmentRepository, {
     strict: false,
   });
-  const categoryRepository = moduleRef.get(CategoryRepository, {
+  const categoryRepository = moduleRef.get(DepartmentCategoryRepository, {
     strict: false,
   });
   const productCategoryRepository = moduleRef.get(ProductCategoryRepository, {

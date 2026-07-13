@@ -1,6 +1,6 @@
 import { ObjectType, Field, Int, Float } from '@nestjs/graphql';
 import { MaterialImpactEstimateEntity } from './material-impact-estimate.entity';
-import { ProductCategoryEntity } from './product-category.entity';
+import { ProductCategoryEntity } from '../../productCategories/entities';
 
 /**
  * GraphQL ProductCategoryMaterial Entity

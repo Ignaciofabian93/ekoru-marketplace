@@ -1,0 +1,7 @@
+{
+  "errors.department_not_found": "Department with slug '{slug}' not found",
+  "errors.department_not_found_id": "Department with id '{id}' not found",
+  "errors.invalid_pagination": "Invalid pagination parameters",
+  "errors.invalid_page": "Page must be greater than or equal to 1",
+  "errors.page_size_out_of_range": "Page size must be between {min} and {max}"
+}
