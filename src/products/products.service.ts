@@ -594,19 +594,38 @@ export class ProductsService {
   }
 
   /**
+   * Allowed sort fields, keyed by their lowercase form so client casing
+   * (createdAt, createdat, CREATED_AT stripped of underscores, etc.) cannot
+   * produce a column Prisma does not know.
+   */
+  private static readonly SORTABLE_FIELDS: Record<
+    string,
+    keyof Prisma.ProductOrderByWithRelationInput
+  > = {
+    createdat: 'createdAt',
+    price: 'price',
+    name: 'name',
+    condition: 'condition',
+  };
+
+  /**
    * Build Prisma orderBy clause from sort input
    */
   private buildOrderBy(
     sort?: ProductSortInput,
   ): Prisma.ProductOrderByWithRelationInput {
-    if (!sort || !sort.field) {
+    const field = sort?.field
+      ? ProductsService.SORTABLE_FIELDS[
+          sort.field.replace(/_/g, '').toLowerCase()
+        ]
+      : undefined;
+
+    if (!field) {
       return { createdAt: 'desc' };
     }
 
-    const field = sort.field.toLowerCase();
-    const order = sort.order?.toLowerCase() || 'desc';
-
-    return { [field]: order } as Prisma.ProductOrderByWithRelationInput;
+    const order = sort?.order?.toLowerCase() === 'asc' ? 'asc' : 'desc';
+    return { [field]: order };
   }
 
   /**
