@@ -29,10 +29,10 @@ export class ProductsService {
       include: {
         productCategory: {
           include: {
-            translations: true,
+            productCategoryTranslation: true,
             departmentCategory: {
               include: {
-                translations: true,
+                departmentCategoryTranslation: true,
                 department: {
                   include: {
                     translations: true,
