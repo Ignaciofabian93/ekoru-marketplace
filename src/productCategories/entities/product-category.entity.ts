@@ -1,6 +1,7 @@
 import { ObjectType, Field, Int, Float } from '@nestjs/graphql';
 import { ProductSize, WeightUnit } from '@prisma/client';
 import { ProductCategoryTranslationEntity } from './product-category-translation.entity';
+import { DepartmentCategoryEntity } from '../../departmentCategories';
 
 /**
  * GraphQL ProductCategory Entity
@@ -8,10 +9,10 @@ import { ProductCategoryTranslationEntity } from './product-category-translation
 @ObjectType('ProductCategory')
 export class ProductCategoryEntity {
   @Field(() => Int)
-  id: number;
+  id!: number;
 
   @Field(() => Int)
-  departmentCategoryId: number;
+  departmentCategoryId!: number;
 
   @Field(() => Float, { nullable: true })
   averageWeight?: number;
@@ -23,17 +24,23 @@ export class ProductCategoryEntity {
   weightUnit?: WeightUnit;
 
   @Field(() => Boolean)
-  isActive: boolean;
+  isActive!: boolean;
 
   @Field(() => Int)
-  sortOrder: number;
+  sortOrder!: number;
 
   @Field(() => Date)
-  createdAt: Date;
+  createdAt!: Date;
 
   @Field(() => Date)
-  updatedAt: Date;
+  updatedAt?: Date;
 
   @Field(() => ProductCategoryTranslationEntity, { nullable: true })
   translation?: ProductCategoryTranslationEntity;
+
+  @Field(() => DepartmentCategoryEntity, {
+    nullable: true,
+    description: 'Department category details',
+  })
+  departmentCategory?: DepartmentCategoryEntity;
 }
