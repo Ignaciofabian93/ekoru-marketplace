@@ -86,7 +86,23 @@ describe('ProductsService', () => {
       expect(result).toEqual(mockProduct);
       expect(prismaService.product.findUnique).toHaveBeenCalledWith({
         where: { id: 1 },
-        include: { productCategory: true },
+        include: {
+          productCategory: {
+            include: {
+              productCategoryTranslation: true,
+              departmentCategory: {
+                include: {
+                  departmentCategoryTranslation: true,
+                  department: {
+                    include: {
+                      translations: true,
+                    },
+                  },
+                },
+              },
+            },
+          },
+        },
       });
     });
 
