@@ -72,6 +72,9 @@ export class ProductEntity {
   @Field(() => Int, { description: 'Number of views' })
   viewCount!: number;
 
+  @Field(() => Int, { description: 'Number of likes/favorites' })
+  likesCount!: number;
+
   @Field(() => Date, { description: 'Creation timestamp' })
   createdAt!: Date;
 

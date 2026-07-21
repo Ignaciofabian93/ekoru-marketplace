@@ -550,22 +550,35 @@ export class ProductsService {
       throw new NotFoundException(`Product with ID ${productId} not found`);
     }
 
-    const existing = await this.prisma.marketplaceProductLike.findUnique({
-      where: { productId_sellerId: { productId, sellerId } },
-      select: { id: true },
+    // Toggle the like row and keep the denormalized `likesCount` counter in
+    // sync. The count is recomputed from the like rows (not blindly ±1) so it
+    // self-heals from any drift. Runs in a transaction so a row and its count
+    // never diverge, and returns the updated product so the mutation's
+    // `likesCount` is fresh (`isLiked` re-resolves per request via its loader).
+    return this.prisma.$transaction(async (tx) => {
+      const existing = await tx.marketplaceProductLike.findUnique({
+        where: { productId_sellerId: { productId, sellerId } },
+        select: { id: true },
+      });
+
+      if (existing) {
+        await tx.marketplaceProductLike.delete({ where: { id: existing.id } });
+      } else {
+        await tx.marketplaceProductLike.create({
+          data: { productId, sellerId },
+        });
+      }
+
+      const likesCount = await tx.marketplaceProductLike.count({
+        where: { productId },
+      });
+
+      return tx.product.update({
+        where: { id: productId },
+        data: { likesCount },
+        include: { productCategory: true },
+      });
     });
-
-    if (existing) {
-      await this.prisma.marketplaceProductLike.delete({
-        where: { id: existing.id },
-      });
-    } else {
-      await this.prisma.marketplaceProductLike.create({
-        data: { productId, sellerId },
-      });
-    }
-
-    return product;
   }
 
   /**
