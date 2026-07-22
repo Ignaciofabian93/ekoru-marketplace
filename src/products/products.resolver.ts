@@ -256,6 +256,16 @@ export class ProductsResolver {
     });
   }
 
+  /**
+   * Federation entity resolver: hydrates a Product that another subgraph
+   * referenced by key alone (e.g. a hit from ekoru-search). Without it the
+   * gateway can only hand back the id and every other field resolves to null.
+   */
+  @ResolveReference()
+  async resolveReference(reference: { __typename: string; id: number }) {
+    return this.productsService.getProductById(Number(reference.id));
+  }
+
   // Field resolvers
   @ResolveField(() => Boolean, {
     description: 'Whether the current seller has favorited this product',
