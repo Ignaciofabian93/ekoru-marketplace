@@ -53,6 +53,19 @@ export class ProductsService {
   }
 
   /**
+   * Batch lookup by ids — used by the transactions subgraph at checkout to read
+   * canonical prices/sellers (never trusting client-supplied amounts). Returns
+   * whatever exists (soft-deleted rows excluded); callers detect missing ids by
+   * comparing lengths, and read `isActive` to reject unavailable listings.
+   */
+  async getProductsByIds(ids: number[]) {
+    if (ids.length === 0) return [];
+    return this.prisma.product.findMany({
+      where: { id: { in: ids }, deletedAt: null },
+    });
+  }
+
+  /**
    * Get all products with pagination and filters
    */
   async getProducts({

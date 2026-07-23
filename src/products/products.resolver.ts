@@ -40,6 +40,16 @@ export class ProductsResolver {
     return this.productsService.getProductById(Number(id));
   }
 
+  /**
+   * Batch price/seller lookup for checkout (called by the transactions
+   * subgraph). Kept as a plain list query — the caller only needs a handful of
+   * fields and matches results to requested ids itself.
+   */
+  @Query(() => [ProductEntity], { name: 'productsByIds' })
+  async productsByIds(@Args('ids', { type: () => [Int] }) ids: number[]) {
+    return this.productsService.getProductsByIds(ids);
+  }
+
   @Query(() => ProductConnectionEntity, { nullable: true, name: 'getProducts' })
   async getProducts(
     @Args('page', { type: () => Int, defaultValue: 1 }) page: number,
