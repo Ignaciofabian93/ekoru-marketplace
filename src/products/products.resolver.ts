@@ -50,6 +50,30 @@ export class ProductsResolver {
     return this.productsService.getProductsByIds(ids);
   }
 
+  /**
+   * Internal: reserve/release/retire products for the P2P deal flow. Guarded by
+   * INTERNAL_SERVICE_SECRET — only the transactions subgraph may call it.
+   */
+  @Mutation(() => Boolean, { name: 'setProductAvailability' })
+  async setProductAvailability(
+    @Args('ids', { type: () => [Int] }) ids: number[],
+    @Args('internalSecret', { type: () => String }) internalSecret: string,
+    @Context() ctx: GraphQLContext,
+    @Args('reservedUntil', { type: () => Date, nullable: true })
+    reservedUntil?: Date,
+    @Args('sold', { type: () => Boolean, nullable: true }) sold?: boolean,
+  ): Promise<boolean> {
+    const expected = process.env.INTERNAL_SERVICE_SECRET;
+    if (!expected) throw new Error('INTERNAL_SERVICE_SECRET no configurado');
+    if ((ctx.internalSecret ?? internalSecret) !== expected) {
+      throw new Error('Unauthorized');
+    }
+    return this.productsService.setProductAvailability(ids, {
+      reservedUntil,
+      sold,
+    });
+  }
+
   @Query(() => ProductConnectionEntity, { nullable: true, name: 'getProducts' })
   async getProducts(
     @Args('page', { type: () => Int, defaultValue: 1 }) page: number,

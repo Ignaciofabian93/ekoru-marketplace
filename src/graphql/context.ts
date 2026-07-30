@@ -44,6 +44,9 @@ export function createGraphQLContext(
   const sellerId = req.headers['x-seller-id'] as string | undefined;
   const adminId = req.headers['x-admin-id'] as string | undefined;
   const token = req.headers.authorization?.replace('Bearer ', '');
+  // Set by direct server-to-server callers (e.g. ekoru-transactions) to reach
+  // the internal `setProductAvailability` reservation mutation.
+  const internalSecret = req.headers['x-internal-secret'] as string | undefined;
 
   // DataLoaders MUST be fresh per request to prevent stale cache
   const loaders = {
@@ -82,6 +85,7 @@ export function createGraphQLContext(
     sellerId,
     adminId,
     token,
+    internalSecret,
   };
 }
 

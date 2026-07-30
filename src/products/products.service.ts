@@ -66,6 +66,23 @@ export class ProductsService {
   }
 
   /**
+   * Reservation control for the P2P deal flow (called by the transactions
+   * subgraph). `sold` retires the item from sale; otherwise `reservedUntil`
+   * holds it (a value in the future hides it from listings) or clears it (null).
+   */
+  async setProductAvailability(
+    ids: number[],
+    opts: { reservedUntil?: Date | null; sold?: boolean },
+  ): Promise<boolean> {
+    if (ids.length === 0) return true;
+    const data = opts.sold
+      ? { isActive: false, reservedUntil: null }
+      : { reservedUntil: opts.reservedUntil ?? null };
+    await this.prisma.product.updateMany({ where: { id: { in: ids } }, data });
+    return true;
+  }
+
+  /**
    * Get all products with pagination and filters
    */
   async getProducts({
@@ -709,6 +726,10 @@ export class ProductsService {
     const where: Prisma.ProductWhereInput = {
       isActive: true,
       deletedAt: null,
+      // Hide items an accepted P2P deal is currently holding (reservedUntil in
+      // the future). Null / past = available. NOT avoids clashing with other
+      // filter clauses.
+      NOT: { reservedUntil: { gt: new Date() } },
     };
 
     if (excludeSellerId) {

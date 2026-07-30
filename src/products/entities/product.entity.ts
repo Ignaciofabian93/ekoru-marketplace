@@ -87,6 +87,13 @@ export class ProductEntity {
   })
   deletedAt?: Date;
 
+  @Field(() => Date, {
+    nullable: true,
+    description:
+      'Held by an accepted P2P deal; while in the future the item is reserved.',
+  })
+  reservedUntil?: Date;
+
   // Relations
   @Field(() => ProductCategoryEntity, {
     nullable: true,

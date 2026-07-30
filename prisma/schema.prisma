@@ -250,6 +250,8 @@ model Product {
   deletedAt            DateTime?
   featuredFrom         DateTime?
   featuredUntil        DateTime?
+  /// Held by an accepted P2P deal; listings/search hide the item until it passes.
+  reservedUntil        DateTime?
   advertisement        Advertisement[]
   chat                 Chat[]
   likes                MarketplaceProductLike[]
@@ -264,6 +266,7 @@ model Product {
   @@index([viewCount(sort: Desc)])
   @@index([productCategoryId, isActive, createdAt(sort: Desc)])
   @@index([featuredUntil])
+  @@index([reservedUntil])
 }
 
 model Chat {

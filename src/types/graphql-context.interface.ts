@@ -82,6 +82,10 @@ export interface GraphQLContext {
 
   // Optional: Auth token
   token?: string;
+
+  // Optional: shared internal secret (x-internal-secret) — guards the internal
+  // setProductAvailability reservation mutation called by ekoru-transactions.
+  internalSecret?: string;
 }
 
 /**
