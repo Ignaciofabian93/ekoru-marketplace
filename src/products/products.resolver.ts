@@ -62,16 +62,36 @@ export class ProductsResolver {
     @Args('reservedUntil', { type: () => Date, nullable: true })
     reservedUntil?: Date,
     @Args('sold', { type: () => Boolean, nullable: true }) sold?: boolean,
+    @Args('soldVia', { type: () => String, nullable: true }) soldVia?: string,
   ): Promise<boolean> {
-    const expected = process.env.INTERNAL_SERVICE_SECRET;
-    if (!expected) throw new Error('INTERNAL_SERVICE_SECRET no configurado');
-    if ((ctx.internalSecret ?? internalSecret) !== expected) {
-      throw new Error('Unauthorized');
-    }
+    this.assertInternal(ctx, internalSecret);
     return this.productsService.setProductAvailability(ids, {
       reservedUntil,
       sold,
+      soldVia,
     });
+  }
+
+  /**
+   * Internal: soft-delete products sold more than `olderThanDays` ago. Called
+   * by the transactions P2P sweep. Returns how many were purged.
+   */
+  @Mutation(() => Int, { name: 'purgeSoldProducts' })
+  async purgeSoldProducts(
+    @Args('olderThanDays', { type: () => Int }) olderThanDays: number,
+    @Args('internalSecret', { type: () => String }) internalSecret: string,
+    @Context() ctx: GraphQLContext,
+  ): Promise<number> {
+    this.assertInternal(ctx, internalSecret);
+    return this.productsService.purgeSoldProducts(olderThanDays);
+  }
+
+  private assertInternal(ctx: GraphQLContext, arg: string): void {
+    const expected = process.env.INTERNAL_SERVICE_SECRET;
+    if (!expected) throw new Error('INTERNAL_SERVICE_SECRET no configurado');
+    if ((ctx.internalSecret ?? arg) !== expected) {
+      throw new Error('Unauthorized');
+    }
   }
 
   @Query(() => ProductConnectionEntity, { nullable: true, name: 'getProducts' })
@@ -99,8 +119,9 @@ export class ProductsResolver {
   })
   async getProductsBySeller(
     @Args('sellerId', { type: () => ID }) sellerId: string,
-    @Args('page', { type: () => Int, defaultValue: 1 }) page: number,
-    @Args('pageSize', { type: () => Int, defaultValue: 10 }) pageSize: number,
+    @CurrentSeller() currentSellerId?: string,
+    @Args('page', { type: () => Int, defaultValue: 1 }) page = 1,
+    @Args('pageSize', { type: () => Int, defaultValue: 10 }) pageSize = 10,
     @Args('filter', { type: () => ProductFilterInput, nullable: true })
     filter?: ProductFilterInput,
     @Args('sort', { type: () => ProductSortInput, nullable: true })
@@ -112,6 +133,9 @@ export class ProductsResolver {
       pageSize,
       filter,
       sort,
+      // The owner viewing their own storefront sees everything (active, drafts,
+      // reserved, sold); the public only sees available listings.
+      ownerView: !!currentSellerId && currentSellerId === sellerId,
     });
   }
 

@@ -94,6 +94,18 @@ export class ProductEntity {
   })
   reservedUntil?: Date;
 
+  @Field(() => Date, {
+    nullable: true,
+    description: 'When a completed P2P deal marked this item sold/exchanged.',
+  })
+  soldAt?: Date;
+
+  @Field(() => String, {
+    nullable: true,
+    description: 'How it left the marketplace: "SALE" | "EXCHANGE".',
+  })
+  soldVia?: string;
+
   // Relations
   @Field(() => ProductCategoryEntity, {
     nullable: true,

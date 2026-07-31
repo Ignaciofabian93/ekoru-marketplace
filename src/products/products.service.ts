@@ -72,14 +72,39 @@ export class ProductsService {
    */
   async setProductAvailability(
     ids: number[],
-    opts: { reservedUntil?: Date | null; sold?: boolean },
+    opts: {
+      reservedUntil?: Date | null;
+      sold?: boolean;
+      soldVia?: string | null;
+    },
   ): Promise<boolean> {
     if (ids.length === 0) return true;
+    // Sold items keep isActive=true and are marked via soldAt — that way the
+    // profile can tell "sold" apart from a deactivated "draft". Listings exclude
+    // soldAt (buildWhereClause), so they still leave the marketplace.
     const data = opts.sold
-      ? { isActive: false, reservedUntil: null }
+      ? {
+          soldAt: new Date(),
+          soldVia: opts.soldVia ?? null,
+          reservedUntil: null,
+        }
       : { reservedUntil: opts.reservedUntil ?? null };
     await this.prisma.product.updateMany({ where: { id: { in: ids } }, data });
     return true;
+  }
+
+  /**
+   * Soft-deletes products sold more than `olderThanDays` ago — the profile keeps
+   * a sold item ~a week, then it's cleaned up. Called periodically by the
+   * transactions P2P sweep (marketplace has no scheduler of its own).
+   */
+  async purgeSoldProducts(olderThanDays: number): Promise<number> {
+    const cutoff = new Date(Date.now() - olderThanDays * 86_400_000);
+    const res = await this.prisma.product.updateMany({
+      where: { soldAt: { lt: cutoff }, deletedAt: null },
+      data: { deletedAt: new Date() },
+    });
+    return res.count;
   }
 
   /**
@@ -127,18 +152,21 @@ export class ProductsService {
     pageSize,
     filter,
     sort,
+    ownerView,
   }: {
     sellerId: string;
     page: number;
     pageSize: number;
     filter?: ProductFilterInput;
     sort?: ProductSortInput;
+    ownerView?: boolean;
   }) {
     const skip = (page - 1) * pageSize;
-    const where = {
-      ...this.buildWhereClause(filter),
-      sellerId,
-    };
+    // Owner sees their whole (non-deleted) storefront so the profile can split
+    // it into active / drafts / sold; the public only sees available listings.
+    const where: Prisma.ProductWhereInput = ownerView
+      ? { sellerId, deletedAt: null }
+      : { ...this.buildWhereClause(filter), sellerId };
     const orderBy = this.buildOrderBy(sort);
 
     const [products, totalCount] = await Promise.all([
@@ -726,6 +754,8 @@ export class ProductsService {
     const where: Prisma.ProductWhereInput = {
       isActive: true,
       deletedAt: null,
+      // Sold items leave the marketplace (they stay only in the seller profile).
+      soldAt: null,
       // Hide items an accepted P2P deal is currently holding. Must be a
       // null-safe OR: a plain `NOT: { reservedUntil: { gt: now } }` drops every
       // row where reservedUntil IS NULL (SQL: NOT(NULL > now) is not TRUE), i.e.

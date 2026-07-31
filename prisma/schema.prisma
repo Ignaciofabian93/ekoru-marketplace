@@ -252,6 +252,11 @@ model Product {
   featuredUntil        DateTime?
   /// Held by an accepted P2P deal; listings/search hide the item until it passes.
   reservedUntil        DateTime?
+  /// Set when a P2P deal completes (sold/exchanged). Kept in the profile until
+  /// soft-deleted ~a week later.
+  soldAt               DateTime?
+  /// "SALE" | "EXCHANGE" — for the profile label. Null when unsold.
+  soldVia              String?
   advertisement        Advertisement[]
   chat                 Chat[]
   likes                MarketplaceProductLike[]
@@ -267,6 +272,7 @@ model Product {
   @@index([productCategoryId, isActive, createdAt(sort: Desc)])
   @@index([featuredUntil])
   @@index([reservedUntil])
+  @@index([soldAt])
 }
 
 model Chat {

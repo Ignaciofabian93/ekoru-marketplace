@@ -144,7 +144,12 @@ describe('ProductsResolver', () => {
         mockPaginatedResult,
       );
 
-      const result = await resolver.getProductsBySeller('seller-123', 1, 10);
+      const result = await resolver.getProductsBySeller(
+        'seller-123',
+        undefined,
+        1,
+        10,
+      );
 
       expect(result).toEqual(mockPaginatedResult);
       expect(productsService.getProductsBySeller).toHaveBeenCalledWith({
@@ -153,6 +158,7 @@ describe('ProductsResolver', () => {
         pageSize: 10,
         filter: undefined,
         sort: undefined,
+        ownerView: false,
       });
     });
   });
