@@ -726,10 +726,11 @@ export class ProductsService {
     const where: Prisma.ProductWhereInput = {
       isActive: true,
       deletedAt: null,
-      // Hide items an accepted P2P deal is currently holding (reservedUntil in
-      // the future). Null / past = available. NOT avoids clashing with other
-      // filter clauses.
-      NOT: { reservedUntil: { gt: new Date() } },
+      // Hide items an accepted P2P deal is currently holding. Must be a
+      // null-safe OR: a plain `NOT: { reservedUntil: { gt: now } }` drops every
+      // row where reservedUntil IS NULL (SQL: NOT(NULL > now) is not TRUE), i.e.
+      // it would hide *all* unreserved products. Null / past = available.
+      OR: [{ reservedUntil: null }, { reservedUntil: { lte: new Date() } }],
     };
 
     if (excludeSellerId) {
