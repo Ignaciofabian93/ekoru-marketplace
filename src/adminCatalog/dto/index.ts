@@ -8,4 +8,5 @@ export {
   DepartmentCategoryTranslationUpsertRowInput,
   ProductCategoryUpsertRowInput,
   ProductCategoryTranslationUpsertRowInput,
+  ProductCategoryMaterialUpsertRowInput,
 } from './admin-catalog.inputs';

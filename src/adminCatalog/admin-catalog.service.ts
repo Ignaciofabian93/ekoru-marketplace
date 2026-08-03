@@ -17,6 +17,7 @@ import {
   DepartmentCategoryTranslationUpsertRowInput,
   ProductCategoryUpsertRowInput,
   ProductCategoryTranslationUpsertRowInput,
+  ProductCategoryMaterialUpsertRowInput,
 } from './dto';
 
 type BulkOutcome = { outcome: 'created' | 'updated'; id: number };
@@ -173,14 +174,24 @@ export class AdminCatalogService {
         take,
         include: {
           productCategoryTranslation: { orderBy: { language: 'asc' } },
+          materials: {
+            orderBy: { id: 'asc' },
+            include: { material: { select: { materialType: true } } },
+          },
         },
       }),
     ]);
 
-    const nodes = rows.map(({ productCategoryTranslation, ...row }) => ({
-      ...row,
-      translations: productCategoryTranslation,
-    }));
+    const nodes = rows.map(
+      ({ productCategoryTranslation, materials, ...row }) => ({
+        ...row,
+        translations: productCategoryTranslation,
+        materials: materials.map(({ material, ...m }) => ({
+          ...m,
+          materialType: material?.materialType ?? null,
+        })),
+      }),
+    );
 
     return createPaginatedResponse(nodes, count, page, pageSize);
   }
@@ -500,6 +511,70 @@ export class AdminCatalogService {
     });
   }
 
+  async bulkUpsertProductCategoryMaterials({
+    adminId,
+    rows,
+  }: {
+    adminId?: string;
+    rows: ProductCategoryMaterialUpsertRowInput[];
+  }): Promise<BulkResult> {
+    this.requireAdmin(adminId);
+
+    return this.processRows(rows, async (row) => {
+      const data = this.pickDefined({
+        productCategoryId: row.productCategoryId,
+        materialTypeId: row.materialTypeId,
+        quantity: row.quantity,
+        unit: row.unit,
+        isPrimary: row.isPrimary,
+      });
+
+      if (row.id != null) {
+        await this.prisma.productCategoryMaterial.update({
+          where: { id: row.id },
+          data,
+        });
+        return { outcome: 'updated', id: row.id };
+      }
+
+      // No id: (productCategoryId, materialTypeId) is unique — match on it.
+      if (row.productCategoryId != null && row.materialTypeId != null) {
+        const existing = await this.prisma.productCategoryMaterial.findUnique({
+          where: {
+            productCategoryId_materialTypeId: {
+              productCategoryId: row.productCategoryId,
+              materialTypeId: row.materialTypeId,
+            },
+          },
+          select: { id: true },
+        });
+        if (existing) {
+          await this.prisma.productCategoryMaterial.update({
+            where: { id: existing.id },
+            data,
+          });
+          return { outcome: 'updated', id: existing.id };
+        }
+      }
+
+      this.requireFields(row, [
+        'productCategoryId',
+        'materialTypeId',
+        'quantity',
+      ]);
+      const created = await this.prisma.productCategoryMaterial.create({
+        data: {
+          productCategoryId: row.productCategoryId!,
+          materialTypeId: row.materialTypeId!,
+          quantity: row.quantity!,
+          unit: row.unit ?? undefined,
+          isPrimary: row.isPrimary ?? undefined,
+        },
+      });
+      return { outcome: 'created', id: created.id };
+    });
+  }
+
   // ─── Deletes ────────────────────────────────────────────────────────────────
 
   async deleteDepartment({ adminId, id }: { adminId?: string; id: number }) {
@@ -592,6 +667,22 @@ export class AdminCatalogService {
     this.requireAdmin(adminId);
     try {
       await this.prisma.productCategoryTranslation.delete({ where: { id } });
+      return true;
+    } catch (error) {
+      throw this.friendlyError(error);
+    }
+  }
+
+  async deleteProductCategoryMaterial({
+    adminId,
+    id,
+  }: {
+    adminId?: string;
+    id: number;
+  }) {
+    this.requireAdmin(adminId);
+    try {
+      await this.prisma.productCategoryMaterial.delete({ where: { id } });
       return true;
     } catch (error) {
       throw this.friendlyError(error);

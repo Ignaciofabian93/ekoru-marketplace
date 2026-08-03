@@ -70,6 +70,41 @@ export class RawDepartmentCategoryEntity {
   translations: DepartmentCategoryTranslationEntity[];
 }
 
+/**
+ * A material composition row of a product category (join to
+ * MaterialImpactEstimate). `materialType` is the related material's name,
+ * denormalized for display; it is read-only.
+ */
+@ObjectType('RawProductCategoryMaterial')
+export class RawProductCategoryMaterialEntity {
+  @Field(() => Int)
+  id: number;
+
+  @Field(() => Int)
+  productCategoryId: number;
+
+  @Field(() => Int)
+  materialTypeId: number;
+
+  @Field(() => String, { nullable: true })
+  materialType?: string | null;
+
+  @Field(() => Float)
+  quantity: number;
+
+  @Field(() => String)
+  unit: string;
+
+  @Field(() => Boolean)
+  isPrimary: boolean;
+
+  @Field(() => Date)
+  createdAt: Date;
+
+  @Field(() => Date)
+  updatedAt: Date;
+}
+
 @ObjectType('RawProductCategory')
 export class RawProductCategoryEntity {
   @Field(() => Int)
@@ -107,6 +142,9 @@ export class RawProductCategoryEntity {
 
   @Field(() => [ProductCategoryTranslationEntity])
   translations: ProductCategoryTranslationEntity[];
+
+  @Field(() => [RawProductCategoryMaterialEntity])
+  materials: RawProductCategoryMaterialEntity[];
 }
 
 @ObjectType('RawDepartmentConnection')

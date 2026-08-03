@@ -5,6 +5,7 @@ import {
   ProductCondition,
   ProductSize,
   WeightUnit,
+  AdvertisementType,
 } from '@prisma/client';
 
 // Local enums not present in Prisma schema
@@ -59,4 +60,16 @@ registerEnumType(ProductSortField, {
   description: 'Product sort field options',
 });
 
-export { Language, Badge, ProductCondition, ProductSize, WeightUnit };
+registerEnumType(AdvertisementType, {
+  name: 'AdvertisementType',
+  description: 'Placement type of a marketplace advertisement',
+});
+
+export {
+  Language,
+  Badge,
+  ProductCondition,
+  ProductSize,
+  WeightUnit,
+  AdvertisementType,
+};

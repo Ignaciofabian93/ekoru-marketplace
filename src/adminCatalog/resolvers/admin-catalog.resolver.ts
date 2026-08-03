@@ -17,6 +17,7 @@ import {
   DepartmentCategoryTranslationUpsertRowInput,
   ProductCategoryUpsertRowInput,
   ProductCategoryTranslationUpsertRowInput,
+  ProductCategoryMaterialUpsertRowInput,
 } from '../dto';
 import { AdminCatalogService } from '../admin-catalog.service';
 
@@ -218,6 +219,25 @@ export class AdminCatalogResolver {
     });
   }
 
+  @Mutation(() => BulkUpsertResultEntity, {
+    description:
+      'Creates or updates product category material links. Rows without id are ' +
+      'matched by (productCategoryId, materialTypeId). Admins only.',
+  })
+  async bulkUpsertProductCategoryMaterials(
+    @Args('rows', { type: () => [ProductCategoryMaterialUpsertRowInput] })
+    rows: ProductCategoryMaterialUpsertRowInput[],
+    @CurrentAdmin() adminId?: string,
+  ) {
+    this.logger.debug(
+      `Mutation: bulkUpsertProductCategoryMaterials(${rows.length} rows)`,
+    );
+    return this.adminCatalogService.bulkUpsertProductCategoryMaterials({
+      adminId,
+      rows,
+    });
+  }
+
   // ─── Deletes ────────────────────────────────────────────────────────────────
 
   @Mutation(() => Boolean, {
@@ -297,6 +317,21 @@ export class AdminCatalogResolver {
   ) {
     this.logger.debug(`Mutation: deleteProductCategoryTranslation(${id})`);
     return this.adminCatalogService.deleteProductCategoryTranslation({
+      adminId,
+      id,
+    });
+  }
+
+  @Mutation(() => Boolean, {
+    description:
+      'Deletes a single product category material link. Admins only.',
+  })
+  async deleteProductCategoryMaterial(
+    @Args('id', { type: () => Int }) id: number,
+    @CurrentAdmin() adminId?: string,
+  ) {
+    this.logger.debug(`Mutation: deleteProductCategoryMaterial(${id})`);
+    return this.adminCatalogService.deleteProductCategoryMaterial({
       adminId,
       id,
     });

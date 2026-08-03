@@ -18,6 +18,7 @@ import { ProductsModule } from './products/products.module';
 import { AdminCatalogModule } from './adminCatalog';
 import { AdminImpactModule } from './adminImpact';
 import { AdminProductModule } from './adminProducts';
+import { AdminAdsModule } from './adminAds';
 import { JSONScalar } from './graphql/scalars';
 import { HealthController } from './health/health.controller';
 import configuration from './config/configuration';
@@ -91,6 +92,7 @@ import { PrometheusModule } from '@willsoto/nestjs-prometheus';
     AdminCatalogModule,
     AdminImpactModule,
     AdminProductModule,
+    AdminAdsModule,
   ],
   providers: [JSONScalar, { provide: APP_GUARD, useClass: GqlThrottlerGuard }],
   controllers: [HealthController],

@@ -354,3 +354,50 @@ export class ProductCategoryTranslationUpsertRowInput {
   @IsArray()
   metaKeywords?: string[];
 }
+
+// ─── Product category materials ───────────────────────────────────────────────
+
+@InputType()
+export class ProductCategoryMaterialUpsertRowInput {
+  @Field(() => Int, { nullable: true })
+  @IsOptional()
+  @IsInt()
+  id?: number;
+
+  @Field(() => Int, {
+    nullable: true,
+    description: 'Owner product category. Required when creating (no id).',
+  })
+  @IsOptional()
+  @IsInt()
+  productCategoryId?: number;
+
+  @Field(() => Int, {
+    nullable: true,
+    description: 'MaterialImpactEstimate id. Required when creating (no id).',
+  })
+  @IsOptional()
+  @IsInt()
+  materialTypeId?: number;
+
+  @Field(() => Float, {
+    nullable: true,
+    description: 'Required when creating.',
+  })
+  @IsOptional()
+  @IsNumber()
+  quantity?: number;
+
+  @Field(() => String, {
+    nullable: true,
+    description: 'Unit of the quantity (defaults to "percentage").',
+  })
+  @IsOptional()
+  @IsString()
+  unit?: string;
+
+  @Field(() => Boolean, { nullable: true })
+  @IsOptional()
+  @IsBoolean()
+  isPrimary?: boolean;
+}
