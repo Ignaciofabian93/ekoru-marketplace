@@ -154,50 +154,75 @@ export class AddProductInput {
 @InputType('UpdateProductInput')
 export class UpdateProductInput {
   @Field(() => Int, { description: 'Product ID to update' })
+  @IsInt()
   id!: number;
 
   @Field(() => String, { nullable: true, description: 'Product name' })
+  @IsOptional()
+  @IsString()
   name?: string;
 
   @Field(() => String, { nullable: true, description: 'Product description' })
+  @IsOptional()
+  @IsString()
   description?: string;
 
   @Field(() => String, { nullable: true, description: 'Product color' })
+  @IsOptional()
+  @IsString()
   color?: string;
 
   @Field(() => [String], { nullable: true, description: 'Product image URLs' })
+  @IsOptional()
+  @IsArray()
   images?: string[];
 
   @Field(() => String, { nullable: true, description: 'Product brand' })
+  @IsOptional()
+  @IsString()
   brand?: string;
 
   @Field(() => Int, { nullable: true, description: 'Product price' })
+  @IsOptional()
+  @IsInt()
   price?: number;
 
   @Field(() => Int, { nullable: true, description: 'Product category ID' })
+  @IsOptional()
+  @IsInt()
   productCategoryId?: number;
 
   @Field(() => [Badge], { nullable: true, description: 'Product badges' })
+  @IsOptional()
+  @IsArray()
   badges?: Badge[];
 
   @Field(() => [String], {
     nullable: true,
     description: 'Product interest tags',
   })
+  @IsOptional()
+  @IsArray()
   interests?: string[];
 
   @Field(() => ProductCondition, {
     nullable: true,
     description: 'Product condition',
   })
+  @IsOptional()
+  @IsEnum(ProductCondition)
   condition?: ProductCondition;
 
   @Field(() => String, { nullable: true, description: 'Condition description' })
+  @IsOptional()
+  @IsString()
   conditionDescription?: string;
 
   @Field(() => Boolean, {
     nullable: true,
     description: 'Whether product is exchangeable',
   })
+  @IsOptional()
+  @IsBoolean()
   isExchangeable?: boolean;
 }
