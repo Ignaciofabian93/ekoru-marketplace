@@ -7,7 +7,7 @@ import {
   Query,
   Resolver,
 } from '@nestjs/graphql';
-import { ImpactKind } from '@prisma/client';
+import { ImpactKind, Language } from '@prisma/client';
 
 import { ImpactRecordsService } from './impact-records.service';
 import { SellerImpactYear } from './entities';
@@ -67,12 +67,15 @@ export class ImpactRecordsResolver {
     @Context() ctx: GraphQLContext,
     @Args('year', { type: () => Int, nullable: true }) year?: number,
     @Args('topItems', { type: () => Int, defaultValue: 5 }) topItems?: number,
+    @Args('language', { type: () => Language, nullable: true })
+    language?: Language,
   ): Promise<SellerImpactYear> {
     const sellerId = requireSeller(ctx);
     return this.impactRecords.impactForYear(
       sellerId,
       year ?? new Date().getUTCFullYear(),
       topItems ?? 5,
+      language,
     );
   }
 

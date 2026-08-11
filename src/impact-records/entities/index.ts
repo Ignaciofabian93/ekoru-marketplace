@@ -84,4 +84,17 @@ export class SellerImpactYear {
     description: 'The single biggest-saving items, highest first',
   })
   topItems!: ImpactHighlight[];
+
+  @Field(() => [String], {
+    description:
+      'Admin-curated "your saving is equivalent to…" lines for the CO2 total, ' +
+      'from the Co2ImpactMessage bucket the total falls into. Empty when no ' +
+      'bucket covers it.',
+  })
+  co2Messages!: string[];
+
+  @Field(() => [String], {
+    description: 'The same, for the water total.',
+  })
+  waterMessages!: string[];
 }

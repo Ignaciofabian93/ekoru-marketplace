@@ -1,5 +1,5 @@
 import { Injectable, Logger } from '@nestjs/common';
-import { ImpactKind, ImpactRole, Prisma } from '@prisma/client';
+import { ImpactKind, ImpactRole, Language, Prisma } from '@prisma/client';
 
 import { PrismaService } from '../prisma/prisma.service';
 import { ImpactService } from '../services/impact.service';
@@ -161,6 +161,7 @@ export class ImpactRecordsService {
     sellerId: string,
     year: number,
     topItemsLimit = 5,
+    language?: Language,
   ): Promise<SellerImpactYear> {
     const where = { sellerId, year };
 
@@ -200,10 +201,17 @@ export class ImpactRecordsService {
     const countOf = (kind: ImpactKind) =>
       byKind.find((k) => k.kind === kind)?._count._all ?? 0;
 
+    const totalCo2 = totals._sum.co2SavingsKG ?? 0;
+    const totalWater = totals._sum.waterSavingsLT ?? 0;
+    const [co2Messages, waterMessages] = await Promise.all([
+      this.equivalenceMessages('co2', totalCo2, language),
+      this.equivalenceMessages('water', totalWater, language),
+    ]);
+
     return {
       year,
-      totalCo2SavingsKG: totals._sum.co2SavingsKG ?? 0,
-      totalWaterSavingsLT: totals._sum.waterSavingsLT ?? 0,
+      totalCo2SavingsKG: totalCo2,
+      totalWaterSavingsLT: totalWater,
       totalItems: totals._count._all,
       salesCount: countOf(ImpactKind.SALE),
       exchangesCount: countOf(ImpactKind.EXCHANGE),
@@ -225,7 +233,65 @@ export class ImpactRecordsService {
         waterSavingsLT: row.waterSavingsLT,
         occurredAt: row.occurredAt,
       })),
+      co2Messages,
+      waterMessages,
     };
+  }
+
+  /**
+   * The admin-curated "equivalent to…" lines for a saving.
+   *
+   * `Co2ImpactMessage` / `WaterImpactMessage` are buckets with a min/max range
+   * and three phrasings each, maintained in the admin panel. Using them keeps
+   * the comparisons in the team's own words rather than hard-coding conversion
+   * factors here — and they are already translated.
+   *
+   * Never throws: a missing bucket or a failed lookup just means no
+   * equivalence line, which the UI treats as optional.
+   */
+  private async equivalenceMessages(
+    kind: 'co2' | 'water',
+    value: number,
+    language?: Language,
+  ): Promise<string[]> {
+    if (value <= 0) return [];
+
+    try {
+      const where = { min: { lte: value }, max: { gte: value } };
+      const select = {
+        message1: true,
+        message2: true,
+        message3: true,
+        translations: language
+          ? {
+              where: { language },
+              select: { message1: true, message2: true, message3: true },
+            }
+          : (false as const),
+      };
+
+      const bucket =
+        kind === 'co2'
+          ? await this.prisma.co2ImpactMessage.findFirst({ where, select })
+          : await this.prisma.waterImpactMessage.findFirst({ where, select });
+
+      if (!bucket) return [];
+
+      // A translation for the requested language wins; the base row is the
+      // fallback, matching how the rest of the catalogue resolves copy.
+      const source =
+        (Array.isArray(bucket.translations) && bucket.translations[0]) ||
+        bucket;
+
+      return [source.message1, source.message2, source.message3].filter(
+        (m): m is string => Boolean(m),
+      );
+    } catch (error) {
+      this.logger.warn(
+        `Impact ${kind} equivalence lookup failed: ${String(error)}`,
+      );
+      return [];
+    }
   }
 
   /**

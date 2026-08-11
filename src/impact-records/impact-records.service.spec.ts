@@ -10,6 +10,8 @@ describe('ImpactRecordsService', () => {
   let productFindMany: jest.Mock;
   let createMany: jest.Mock;
   let calculateCategoryImpact: jest.Mock;
+  let co2FindFirst: jest.Mock;
+  let waterFindFirst: jest.Mock;
 
   /** Two products in two categories with different impact figures. */
   const PRODUCTS = [
@@ -31,6 +33,8 @@ describe('ImpactRecordsService', () => {
   beforeEach(async () => {
     productFindMany = jest.fn().mockResolvedValue(PRODUCTS);
     createMany = jest.fn().mockResolvedValue({ count: 2 });
+    co2FindFirst = jest.fn().mockResolvedValue(null);
+    waterFindFirst = jest.fn().mockResolvedValue(null);
     calculateCategoryImpact = jest
       .fn()
       .mockImplementation((categoryId: number) =>
@@ -47,9 +51,14 @@ describe('ImpactRecordsService', () => {
             sellerImpactRecord: {
               createMany,
               groupBy: jest.fn().mockResolvedValue([]),
-              aggregate: jest.fn(),
+              aggregate: jest.fn().mockResolvedValue({
+                _sum: { co2SavingsKG: 12, waterSavingsLT: 800 },
+                _count: { _all: 2 },
+              }),
               findMany: jest.fn().mockResolvedValue([]),
             },
+            co2ImpactMessage: { findFirst: co2FindFirst },
+            waterImpactMessage: { findFirst: waterFindFirst },
           },
         },
         { provide: ImpactService, useValue: { calculateCategoryImpact } },
@@ -231,6 +240,61 @@ describe('ImpactRecordsService', () => {
         unknown
       >;
       expect(where).not.toHaveProperty('deletedAt');
+    });
+  });
+  describe('yearly report', () => {
+    it('attaches the admin-curated equivalence lines for the totals', async () => {
+      co2FindFirst.mockResolvedValue({
+        message1: 'Como no conducir 50 km',
+        message2: 'Como plantar 2 árboles',
+        message3: 'Como apagar la luz 3 días',
+        translations: [],
+      });
+
+      const result = await service.impactForYear('seller-1', 2026);
+
+      expect(result.co2Messages).toEqual([
+        'Como no conducir 50 km',
+        'Como plantar 2 árboles',
+        'Como apagar la luz 3 días',
+      ]);
+      // The bucket is chosen by the total falling inside its min/max range.
+      expect(co2FindFirst).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: { min: { lte: 12 }, max: { gte: 12 } },
+        }),
+      );
+    });
+
+    it('prefers a translation over the base copy', async () => {
+      co2FindFirst.mockResolvedValue({
+        message1: 'base one',
+        message2: 'base two',
+        message3: 'base three',
+        translations: [
+          { message1: 'Like not driving 50 km', message2: 'b', message3: 'c' },
+        ],
+      });
+
+      const result = await service.impactForYear('seller-1', 2026, 5, 'EN');
+
+      expect(result.co2Messages[0]).toBe('Like not driving 50 km');
+    });
+
+    it('returns no lines when no bucket covers the total', async () => {
+      const result = await service.impactForYear('seller-1', 2026);
+      expect(result.co2Messages).toEqual([]);
+      expect(result.waterMessages).toEqual([]);
+    });
+
+    it('still reports the year when the lookup fails', async () => {
+      co2FindFirst.mockRejectedValue(new Error('db down'));
+
+      const result = await service.impactForYear('seller-1', 2026);
+
+      // Equivalence copy is decoration; the totals are the point.
+      expect(result.totalCo2SavingsKG).toBe(12);
+      expect(result.co2Messages).toEqual([]);
     });
   });
 });
