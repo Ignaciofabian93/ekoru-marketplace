@@ -1,6 +1,7 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { ProductsService } from './products.service';
 import { PrismaService } from '../prisma/prisma.service';
+import { ImageProcessorClient } from './image-processor.client';
 import {
   NotFoundException,
   UnauthorizedException,
@@ -49,6 +50,7 @@ describe('ProductsService', () => {
       count: jest.fn(),
       create: jest.fn(),
       update: jest.fn(),
+      updateMany: jest.fn(),
     },
     productCategory: {
       findMany: jest.fn(),
@@ -58,6 +60,12 @@ describe('ProductsService', () => {
     },
   };
 
+  const mockImageProcessor = {
+    deleteMany: jest.fn().mockResolvedValue(0),
+    delete: jest.fn().mockResolvedValue(true),
+    isConfigured: true,
+  };
+
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
@@ -65,6 +73,10 @@ describe('ProductsService', () => {
         {
           provide: PrismaService,
           useValue: mockPrismaService,
+        },
+        {
+          provide: ImageProcessorClient,
+          useValue: mockImageProcessor,
         },
       ],
     }).compile();
@@ -454,6 +466,61 @@ describe('ProductsService', () => {
       await expect(
         service.toggleProductActive({ id: 1, sellerId: 'wrong-seller' }),
       ).rejects.toThrow(ForbiddenException);
+    });
+  });
+  describe('purgeSoldProducts', () => {
+    it('frees the stored images and clears the keys', async () => {
+      mockPrismaService.product.findMany.mockResolvedValue([
+        { id: 1, images: ['products/1/a.webp', 'products/1/b.webp'] },
+        { id: 2, images: ['products/2/c.webp'] },
+      ]);
+      mockPrismaService.product.updateMany.mockResolvedValue({ count: 2 });
+      mockImageProcessor.deleteMany.mockResolvedValue(3);
+
+      const purged = await service.purgeSoldProducts(7);
+
+      expect(purged).toBe(2);
+      expect(mockImageProcessor.deleteMany).toHaveBeenCalledWith([
+        'products/1/a.webp',
+        'products/1/b.webp',
+        'products/2/c.webp',
+      ]);
+      expect(mockPrismaService.product.updateMany).toHaveBeenCalledWith({
+        where: { id: { in: [1, 2] } },
+        data: { deletedAt: expect.any(Date), images: [] },
+      });
+    });
+
+    it('only considers products sold before the cutoff', async () => {
+      mockPrismaService.product.findMany.mockResolvedValue([]);
+
+      await service.purgeSoldProducts(7);
+
+      const where = mockPrismaService.product.findMany.mock.calls[0][0]
+        .where as { soldAt: { lt: Date }; deletedAt: null };
+      expect(where.deletedAt).toBeNull();
+      const expected = Date.now() - 7 * 86_400_000;
+      expect(Math.abs(where.soldAt.lt.getTime() - expected)).toBeLessThan(5000);
+    });
+
+    it('does nothing when nothing is due', async () => {
+      mockPrismaService.product.findMany.mockResolvedValue([]);
+
+      await expect(service.purgeSoldProducts(7)).resolves.toBe(0);
+      expect(mockImageProcessor.deleteMany).not.toHaveBeenCalled();
+      expect(mockPrismaService.product.updateMany).not.toHaveBeenCalled();
+    });
+
+    it('still purges when the image service could not delete', async () => {
+      // An orphaned object costs storage; keeping the product listed is worse.
+      mockPrismaService.product.findMany.mockResolvedValue([
+        { id: 1, images: ['products/1/a.webp'] },
+      ]);
+      mockPrismaService.product.updateMany.mockResolvedValue({ count: 1 });
+      mockImageProcessor.deleteMany.mockResolvedValue(0);
+
+      await expect(service.purgeSoldProducts(7)).resolves.toBe(1);
+      expect(mockPrismaService.product.updateMany).toHaveBeenCalled();
     });
   });
 });

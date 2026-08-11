@@ -6,6 +6,8 @@ import {
   ProductSize,
   WeightUnit,
   AdvertisementType,
+  ImpactRole,
+  ImpactKind,
 } from '@prisma/client';
 
 // Local enums not present in Prisma schema
@@ -72,4 +74,16 @@ export {
   ProductSize,
   WeightUnit,
   AdvertisementType,
+  ImpactRole,
+  ImpactKind,
 };
+
+registerEnumType(ImpactRole, {
+  name: 'ImpactRole',
+  description: 'Which side of a completed deal an impact record belongs to',
+});
+
+registerEnumType(ImpactKind, {
+  name: 'ImpactKind',
+  description: 'How the item changed hands (sale or exchange)',
+});

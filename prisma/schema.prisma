@@ -90,6 +90,16 @@ enum AdvertisementType {
   MONTHLY_PACKAGE
 }
 
+enum ImpactRole {
+  BUYER
+  SELLER
+}
+
+enum ImpactKind {
+  SALE
+  EXCHANGE
+}
+
 // ─── Models ──────────────────────────────────────────────────────────────────────
 
 model Department {
@@ -181,6 +191,7 @@ model ProductCategory {
   product                    Product[]
   departmentCategory         DepartmentCategory           @relation(fields: [departmentCategoryId], references: [id], onDelete: Cascade)
   materials                  ProductCategoryMaterial[]
+  impactRecords              SellerImpactRecord[]
   productCategoryTranslation ProductCategoryTranslation[]
 
   @@index([departmentCategoryId])
@@ -418,5 +429,39 @@ model MarketplaceProductLike {
   @@index([productId])
   @@index([sellerId])
   @@index([createdAt(sort: Desc)])
+}
+
+model SellerImpactRecord {
+  id                   Int             @id @default(autoincrement())
+  sellerId             String
+  role                 ImpactRole
+  kind                 ImpactKind
+  /** Frozen at completion — never recomputed. */
+  co2SavingsKG         Float
+  waterSavingsLT       Float
+  /**
+   * Set on exactly one row per item that changed hands, so platform totals can
+   * be summed without double-counting the two participants of a sale.
+   */
+  countsTowardPlatformTotal Boolean    @default(false)
+  /** Nullable: these rows outlive the product and may outlive the category. */
+  productId            Int?
+  productCategoryId    Int?
+  /** Denormalised so a deleted product/category still renders in the summary. */
+  productNameSnapshot  String?
+  categoryNameSnapshot String?
+  dealId               Int?
+  occurredAt           DateTime
+  /** Denormalised from `occurredAt` — every read of this table groups by year. */
+  year                 Int
+  createdAt            DateTime        @default(now())
+  productCategory      ProductCategory? @relation(fields: [productCategoryId], references: [id], onDelete: SetNull)
+
+  /** One row per participant per item — makes the write idempotent on retry. */
+  @@unique([dealId, sellerId, role, productId])
+  @@index([sellerId, year])
+  @@index([year])
+  @@index([occurredAt])
+  @@index([productCategoryId])
 }
 

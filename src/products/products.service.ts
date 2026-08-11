@@ -6,6 +6,7 @@ import {
   ForbiddenException,
 } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
+import { ImageProcessorClient } from './image-processor.client';
 import { Prisma } from '@prisma/client';
 import {
   ProductFilterInput,
@@ -18,7 +19,10 @@ import {
 export class ProductsService {
   private readonly logger = new Logger(ProductsService.name);
 
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly imageProcessor: ImageProcessorClient,
+  ) {}
 
   /**
    * Get a single product by ID
@@ -94,16 +98,43 @@ export class ProductsService {
   }
 
   /**
-   * Soft-deletes products sold more than `olderThanDays` ago — the profile keeps
-   * a sold item ~a week, then it's cleaned up. Called periodically by the
-   * transactions P2P sweep (marketplace has no scheduler of its own).
+   * Soft-deletes products sold more than `olderThanDays` ago and frees their
+   * stored images — the profile keeps a sold item ~a week, then it's cleaned
+   * up. Called periodically by the transactions P2P sweep (marketplace has no
+   * scheduler of its own).
+   *
+   * Images are deleted here rather than at sale time on purpose: the seller's
+   * profile still shows the sold item during that retention week, and removing
+   * the objects earlier would leave it displaying broken images.
+   *
+   * The environmental impact of these products was snapshotted into
+   * `SellerImpactRecord` when the deal completed, so nothing of lasting value
+   * is lost — that is what makes freeing the storage safe.
+   *
+   * Object deletion is best-effort: `images[]` is cleared regardless, since a
+   * key we failed to delete is an orphaned object, not a reason to keep
+   * pointing at it forever.
    */
   async purgeSoldProducts(olderThanDays: number): Promise<number> {
     const cutoff = new Date(Date.now() - olderThanDays * 86_400_000);
-    const res = await this.prisma.product.updateMany({
+
+    const due = await this.prisma.product.findMany({
       where: { soldAt: { lt: cutoff }, deletedAt: null },
-      data: { deletedAt: new Date() },
+      select: { id: true, images: true },
     });
+    if (due.length === 0) return 0;
+
+    const keys = due.flatMap((product) => product.images ?? []);
+    const deletedObjects = await this.imageProcessor.deleteMany(keys);
+
+    const res = await this.prisma.product.updateMany({
+      where: { id: { in: due.map((p) => p.id) } },
+      data: { deletedAt: new Date(), images: [] },
+    });
+
+    this.logger.log(
+      `Purged ${res.count} sold product(s); freed ${deletedObjects}/${keys.length} image object(s)`,
+    );
     return res.count;
   }
 

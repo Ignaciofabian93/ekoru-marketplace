@@ -4,6 +4,7 @@ import { ProductsService } from './products.service';
 import { ProductsResolver, SellerReferenceResolver } from './products.resolver';
 import { ImpactService } from '../services/impact.service';
 import { ImpactRepository } from '../repositories/impact.repository';
+import { ImageProcessorClient } from './image-processor.client';
 
 /**
  * Products Module
@@ -22,6 +23,8 @@ import { ImpactRepository } from '../repositories/impact.repository';
     SellerReferenceResolver,
     ImpactService,
     ImpactRepository,
+    // Frees stored images when the sold-product sweep retires a listing.
+    ImageProcessorClient,
   ],
   exports: [ProductsService, ImpactService],
 })

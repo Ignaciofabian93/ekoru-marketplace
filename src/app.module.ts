@@ -15,6 +15,7 @@ import { DepartmentsModule } from './departments';
 import { DepartmentCategoriesModule } from './departmentCategories';
 import { ProductCategoriesModule } from './productCategories';
 import { ProductsModule } from './products/products.module';
+import { ImpactRecordsModule } from './impact-records/impact-records.module';
 import { AdminCatalogModule } from './adminCatalog';
 import { AdminImpactModule } from './adminImpact';
 import { AdminProductModule } from './adminProducts';
@@ -87,6 +88,7 @@ import { PrometheusModule } from '@willsoto/nestjs-prometheus';
 
     // Products management
     ProductsModule,
+    ImpactRecordsModule,
 
     // Platform-admin CRUD over catalog tables (raw reads, bulk upserts, deletes)
     AdminCatalogModule,
