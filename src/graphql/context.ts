@@ -7,6 +7,7 @@ import { DepartmentCategoryRepository } from '../departmentCategories/department
 import { ProductCategoryRepository } from '../productCategories/product-category.repository';
 import { DepartmentService } from '../departments/department.service';
 import { I18nService } from '../common/i18n';
+import { resolveIdentity } from '../common/identity';
 import { GraphQLContext } from '../types';
 
 /**
@@ -41,9 +42,11 @@ export function createGraphQLContext(
     req.headers['accept-language'],
   );
 
-  const sellerId = req.headers['x-seller-id'] as string | undefined;
-  const adminId = req.headers['x-admin-id'] as string | undefined;
-  const token = req.headers.authorization?.replace('Bearer ', '');
+  // Identity comes from the verified access token, not from the gateway's
+  // `x-seller-id` / `x-admin-id` headers — those are unsigned and were
+  // believed unconditionally. See ../common/identity.
+  const { sellerId, adminId, adminRole, adminType, adminSellerId, token } =
+    resolveIdentity(req.headers);
   // Set by direct server-to-server callers (e.g. ekoru-transactions) to reach
   // the internal `setProductAvailability` reservation mutation.
   const internalSecret = req.headers['x-internal-secret'] as string | undefined;
@@ -84,6 +87,9 @@ export function createGraphQLContext(
     loaders,
     sellerId,
     adminId,
+    adminRole,
+    adminType,
+    adminSellerId,
     token,
     internalSecret,
   };

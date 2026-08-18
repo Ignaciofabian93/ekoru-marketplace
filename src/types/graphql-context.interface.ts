@@ -74,13 +74,22 @@ export interface GraphQLContext {
     productLikedByMe: DataLoader<number, boolean>;
   };
 
-  // Optional: Authenticated seller ID (from x-seller-id header)
+  // Identity below is derived from the verified access token (see
+  // common/identity.ts), NOT from the gateway's x-seller-id / x-admin-id
+  // headers, which are unsigned and were previously trusted outright.
+
+  // Optional: authenticated seller id (verified `sellerId` claim)
   sellerId?: string;
 
-  // Optional: Authenticated admin ID (from x-admin-id header)
+  // Optional: authenticated admin id (verified `adminId` claim)
   adminId?: string;
 
-  // Optional: Auth token
+  // Optional: admin authorization claims, for role-aware guards
+  adminRole?: string;
+  adminType?: string;
+  adminSellerId?: string;
+
+  // Optional: the verified token, for onward service-to-service calls
   token?: string;
 
   // Optional: shared internal secret (x-internal-secret) — guards the internal

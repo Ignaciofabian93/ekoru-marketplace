@@ -31,7 +31,6 @@ export class ImpactRecordsResolver {
     @Args('kind', { type: () => ImpactKind }) kind: ImpactKind,
     @Args('buyerId', { type: () => ID }) buyerId: string,
     @Args('sellerId', { type: () => ID }) sellerId: string,
-    @Args('internalSecret', { type: () => String }) internalSecret: string,
     @Context() ctx: GraphQLContext,
     @Args('productId', { type: () => Int, nullable: true }) productId?: number,
     @Args('requestedProductId', { type: () => Int, nullable: true })
@@ -39,7 +38,7 @@ export class ImpactRecordsResolver {
     @Args('offeredProductId', { type: () => Int, nullable: true })
     offeredProductId?: number,
   ): Promise<number> {
-    this.assertInternal(ctx, internalSecret);
+    this.assertInternal(ctx);
     return this.impactRecords.recordDealImpact({
       dealId,
       kind,
@@ -79,10 +78,11 @@ export class ImpactRecordsResolver {
     );
   }
 
-  private assertInternal(ctx: GraphQLContext, arg: string): void {
+  /** Header-only; see the note on ProductsResolver.assertInternal. */
+  private assertInternal(ctx: GraphQLContext): void {
     const expected = process.env.INTERNAL_SERVICE_SECRET;
     if (!expected) throw new Error('INTERNAL_SERVICE_SECRET no configurado');
-    if ((ctx.internalSecret ?? arg) !== expected) {
+    if (!ctx.internalSecret || ctx.internalSecret !== expected) {
       throw new Error('Unauthorized');
     }
   }

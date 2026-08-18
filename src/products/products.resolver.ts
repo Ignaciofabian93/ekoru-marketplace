@@ -57,14 +57,13 @@ export class ProductsResolver {
   @Mutation(() => Boolean, { name: 'setProductAvailability' })
   async setProductAvailability(
     @Args('ids', { type: () => [Int] }) ids: number[],
-    @Args('internalSecret', { type: () => String }) internalSecret: string,
     @Context() ctx: GraphQLContext,
     @Args('reservedUntil', { type: () => Date, nullable: true })
     reservedUntil?: Date,
     @Args('sold', { type: () => Boolean, nullable: true }) sold?: boolean,
     @Args('soldVia', { type: () => String, nullable: true }) soldVia?: string,
   ): Promise<boolean> {
-    this.assertInternal(ctx, internalSecret);
+    this.assertInternal(ctx);
     return this.productsService.setProductAvailability(ids, {
       reservedUntil,
       sold,
@@ -79,17 +78,24 @@ export class ProductsResolver {
   @Mutation(() => Int, { name: 'purgeSoldProducts' })
   async purgeSoldProducts(
     @Args('olderThanDays', { type: () => Int }) olderThanDays: number,
-    @Args('internalSecret', { type: () => String }) internalSecret: string,
     @Context() ctx: GraphQLContext,
   ): Promise<number> {
-    this.assertInternal(ctx, internalSecret);
+    this.assertInternal(ctx);
     return this.productsService.purgeSoldProducts(olderThanDays);
   }
 
-  private assertInternal(ctx: GraphQLContext, arg: string): void {
+  /**
+   * The secret is only ever accepted from the `x-internal-secret` header, set
+   * by a direct service-to-service caller. It used to also be accepted as a
+   * GraphQL argument, which put it in the public schema and — combined with
+   * the gateway attaching the header to every federated request — let any
+   * anonymous caller through. Both halves of that are now closed: the gateway
+   * no longer sets the header, and there is no argument to fall back to.
+   */
+  private assertInternal(ctx: GraphQLContext): void {
     const expected = process.env.INTERNAL_SERVICE_SECRET;
     if (!expected) throw new Error('INTERNAL_SERVICE_SECRET no configurado');
-    if ((ctx.internalSecret ?? arg) !== expected) {
+    if (!ctx.internalSecret || ctx.internalSecret !== expected) {
       throw new Error('Unauthorized');
     }
   }

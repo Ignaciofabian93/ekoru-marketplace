@@ -59,10 +59,10 @@ import { PrometheusModule } from '@willsoto/nestjs-prometheus';
           federation: 2,
         },
         sortSchema: true,
-        playground: process.env.NODE_ENV !== 'production',
+        playground: process.env.ENVIRONMENT !== 'production',
         context: createContextFactory(moduleRef),
         formatError: (error) => {
-          if (process.env.NODE_ENV === 'production') {
+          if (process.env.ENVIRONMENT === 'production') {
             delete error.extensions?.exception;
           }
           return error;
