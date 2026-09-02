@@ -524,19 +524,11 @@ export class ProductsService {
   }
 
   /**
-   * Delete a product (soft delete). The owning seller or a platform admin may
-   * delete; admins bypass the ownership check.
+   * Hard-delete a product owned by the calling seller. Returns the deleted id
+   * as feedback. Admins delete through `deleteProductByAdmin` instead.
    */
-  async deleteProduct({
-    id,
-    sellerId,
-    adminId,
-  }: {
-    id: number;
-    sellerId?: string;
-    adminId?: string;
-  }) {
-    if (!sellerId && !adminId) {
+  async deleteProduct({ id, sellerId }: { id: number; sellerId?: string }) {
+    if (!sellerId) {
       throw new UnauthorizedException('Authentication required');
     }
 
@@ -548,24 +540,17 @@ export class ProductsService {
       throw new NotFoundException(`Product with ID ${id} not found`);
     }
 
-    if (!adminId && product.sellerId !== sellerId) {
+    if (product.sellerId !== sellerId) {
       throw new ForbiddenException(
         'You do not have permission to delete this product',
       );
     }
 
-    const deletedProduct = await this.prisma.product.update({
+    const deletedProduct = await this.prisma.product.delete({
       where: { id },
-      data: {
-        deletedAt: new Date(),
-        isActive: false,
-      },
-      include: {
-        productCategory: true,
-      },
     });
 
-    return deletedProduct;
+    return deletedProduct.id;
   }
 
   /**

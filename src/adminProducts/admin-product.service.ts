@@ -147,9 +147,9 @@ export class AdminProductService {
     try {
       // Hard delete. Fails (P2003) while order items, exchanges or chats still
       // reference the product — the safe path for those is setting isActive
-      // false (or the seller's soft delete) via the upsert.
-      await this.prisma.product.delete({ where: { id } });
-      return true;
+      // false via the upsert.
+      const deleted = await this.prisma.product.delete({ where: { id } });
+      return deleted.id;
     } catch (error) {
       throw this.friendlyError(error);
     }

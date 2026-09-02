@@ -290,16 +290,26 @@ describe('ProductsResolver', () => {
   });
 
   describe('deleteProduct', () => {
-    it('should delete a product', async () => {
-      mockProductsService.deleteProduct.mockResolvedValue(mockProduct);
+    it('should delete a product and return its id', async () => {
+      mockProductsService.deleteProduct.mockResolvedValue(1);
 
-      const result = await resolver.deleteProduct('1');
+      const result = await resolver.deleteProduct(1, 'seller-123');
 
-      expect(result).toEqual(mockProduct);
+      expect(result).toBe(1);
+      expect(productsService.deleteProduct).toHaveBeenCalledWith({
+        id: 1,
+        sellerId: 'seller-123',
+      });
+    });
+
+    it('should forward a missing seller so the service rejects it', async () => {
+      mockProductsService.deleteProduct.mockResolvedValue(1);
+
+      await resolver.deleteProduct(1);
+
       expect(productsService.deleteProduct).toHaveBeenCalledWith({
         id: 1,
         sellerId: undefined,
-        adminId: undefined,
       });
     });
   });

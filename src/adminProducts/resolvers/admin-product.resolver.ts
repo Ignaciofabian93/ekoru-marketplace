@@ -69,10 +69,11 @@ export class AdminProductResolver {
     return this.adminProductService.bulkUpsertProducts({ adminId, rows });
   }
 
-  @Mutation(() => Boolean, {
+  @Mutation(() => Int, {
+    name: 'deleteProductByAdmin',
     description:
-      'Hard-deletes a marketplace product. Fails while order items, exchanges ' +
-      'or chats reference it. Admins only.',
+      'Hard-deletes a marketplace product and returns its id. Fails while ' +
+      'order items, exchanges or chats reference it. Admins only.',
   })
   async deleteProduct(
     @Args('id', { type: () => Int }) id: number,

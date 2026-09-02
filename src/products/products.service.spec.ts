@@ -51,6 +51,7 @@ describe('ProductsService', () => {
       create: jest.fn(),
       update: jest.fn(),
       updateMany: jest.fn(),
+      delete: jest.fn(),
     },
     productCategory: {
       findMany: jest.fn(),
@@ -418,21 +419,20 @@ describe('ProductsService', () => {
   });
 
   describe('deleteProduct', () => {
-    it('should soft delete a product', async () => {
+    it('should hard delete a product and return its id', async () => {
       mockPrismaService.product.findUnique.mockResolvedValue(mockProduct);
-      mockPrismaService.product.update.mockResolvedValue({
-        ...mockProduct,
-        deletedAt: new Date(),
-        isActive: false,
-      });
+      mockPrismaService.product.delete.mockResolvedValue(mockProduct);
 
       const result = await service.deleteProduct({
         id: 1,
         sellerId: 'seller-123',
       });
 
-      expect(result.isActive).toBe(false);
-      expect(result.deletedAt).toBeTruthy();
+      expect(result).toBe(1);
+      expect(mockPrismaService.product.delete).toHaveBeenCalledWith({
+        where: { id: 1 },
+      });
+      expect(mockPrismaService.product.update).not.toHaveBeenCalled();
     });
 
     it('should throw NotFoundException when product not found', async () => {
@@ -441,6 +441,25 @@ describe('ProductsService', () => {
       await expect(
         service.deleteProduct({ id: 999, sellerId: 'seller-123' }),
       ).rejects.toThrow(NotFoundException);
+      expect(mockPrismaService.product.delete).not.toHaveBeenCalled();
+    });
+
+    it('should throw UnauthorizedException without a seller', async () => {
+      await expect(service.deleteProduct({ id: 1 })).rejects.toThrow(
+        UnauthorizedException,
+      );
+      expect(mockPrismaService.product.findUnique).not.toHaveBeenCalled();
+    });
+
+    it('should throw ForbiddenException when seller does not own product', async () => {
+      // Admins delete through deleteProductByAdmin — this resolver is
+      // seller-only, so a non-owner is always rejected.
+      mockPrismaService.product.findUnique.mockResolvedValue(mockProduct);
+
+      await expect(
+        service.deleteProduct({ id: 1, sellerId: 'wrong-seller' }),
+      ).rejects.toThrow(ForbiddenException);
+      expect(mockPrismaService.product.delete).not.toHaveBeenCalled();
     });
   });
 

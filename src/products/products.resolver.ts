@@ -267,16 +267,19 @@ export class ProductsResolver {
     return this.productsService.updateProduct({ input, sellerId, adminId });
   }
 
-  @Mutation(() => ProductEntity, { nullable: true, name: 'deleteProduct' })
+  @Mutation(() => Int, {
+    name: 'deleteProduct',
+    description:
+      'Hard-deletes a marketplace product and returns its id. ' +
+      'Fails while order items, exchanges or chats reference it.',
+  })
   async deleteProduct(
-    @Args('id', { type: () => ID }) id: string,
+    @Args('id', { type: () => Int }) id: number,
     @CurrentSeller() sellerId?: string,
-    @CurrentAdmin() adminId?: string,
   ) {
     return this.productsService.deleteProduct({
-      id: Number(id),
+      id,
       sellerId,
-      adminId,
     });
   }
 
