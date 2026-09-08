@@ -794,12 +794,15 @@ export class ProductsService {
       };
     }
 
-    if (filter.minPrice !== undefined) {
-      where.price = { gte: filter.minPrice };
-    }
-
-    if (filter.maxPrice !== undefined) {
-      where.price = { lte: filter.maxPrice };
+    // One `price` key holds both bounds, so each branch has to merge into what
+    // the other left behind. Assigning a fresh object here made `maxPrice`
+    // drop the `gte` again, and a min+max range came back filtered by the max
+    // alone.
+    if (filter.minPrice !== undefined || filter.maxPrice !== undefined) {
+      const price: Prisma.IntFilter = {};
+      if (filter.minPrice !== undefined) price.gte = filter.minPrice;
+      if (filter.maxPrice !== undefined) price.lte = filter.maxPrice;
+      where.price = price;
     }
 
     if (filter.condition) {

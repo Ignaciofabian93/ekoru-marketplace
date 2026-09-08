@@ -168,9 +168,29 @@ describe('ProductsService', () => {
         expect.objectContaining({
           where: expect.objectContaining({
             name: { contains: 'Test', mode: 'insensitive' },
-            price: { lte: 500 },
+            // Both bounds, not just the max: this assertion used to expect
+            // `{ lte: 500 }` and so locked in the bug where a min+max range
+            // silently dropped its lower bound.
+            price: { gte: 100, lte: 500 },
             condition: ProductCondition.NEW,
           }),
+        }),
+      );
+    });
+
+    it('should apply a lone price bound', async () => {
+      mockPrismaService.product.findMany.mockResolvedValue([]);
+      mockPrismaService.product.count.mockResolvedValue(0);
+
+      await service.getProducts({
+        page: 1,
+        pageSize: 10,
+        filter: { minPrice: 100 },
+      });
+
+      expect(prismaService.product.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: expect.objectContaining({ price: { gte: 100 } }),
         }),
       );
     });
