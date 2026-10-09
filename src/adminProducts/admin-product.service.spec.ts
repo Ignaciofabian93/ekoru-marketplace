@@ -1,5 +1,5 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { BadRequestException, UnauthorizedException } from '@nestjs/common';
+import { BadRequestException } from '@nestjs/common';
 import { Prisma } from '@prisma/client';
 import { AdminProductService } from './admin-product.service';
 import { PrismaService } from '../prisma/prisma.service';
@@ -7,7 +7,15 @@ import { PrismaService } from '../prisma/prisma.service';
 describe('AdminProductService', () => {
   let service: AdminProductService;
 
+  const productAdmin = {
+    adminType: 'PLATFORM',
+    role: 'MODERATOR',
+    permissions: ['MANAGE_PRODUCTS'],
+    isActive: true,
+  };
+
   const mockPrismaService = {
+    $queryRaw: jest.fn(),
     product: {
       delete: jest.fn(),
     },
@@ -25,6 +33,7 @@ describe('AdminProductService', () => {
     }).compile();
 
     service = module.get<AdminProductService>(AdminProductService);
+    mockPrismaService.$queryRaw.mockResolvedValue([productAdmin]);
   });
 
   afterEach(() => {
@@ -46,10 +55,32 @@ describe('AdminProductService', () => {
       });
     });
 
-    it('should throw UnauthorizedException without an admin', async () => {
-      await expect(service.deleteProduct({ id: 7 })).rejects.toThrow(
-        UnauthorizedException,
-      );
+    it('should reject a caller without an admin token as UNAUTHORIZED', async () => {
+      await expect(service.deleteProduct({ id: 7 })).rejects.toMatchObject({
+        extensions: { code: 'UNAUTHORIZED' },
+      });
+      expect(mockPrismaService.product.delete).not.toHaveBeenCalled();
+    });
+
+    it('should reject a BUSINESS admin as FORBIDDEN', async () => {
+      mockPrismaService.$queryRaw.mockResolvedValue([
+        { ...productAdmin, adminType: 'BUSINESS' },
+      ]);
+
+      await expect(
+        service.deleteProduct({ adminId: 'admin-1', id: 7 }),
+      ).rejects.toMatchObject({ extensions: { code: 'FORBIDDEN' } });
+      expect(mockPrismaService.product.delete).not.toHaveBeenCalled();
+    });
+
+    it('should reject a platform admin without MANAGE_PRODUCTS', async () => {
+      mockPrismaService.$queryRaw.mockResolvedValue([
+        { ...productAdmin, permissions: ['MANAGE_CATEGORIES'] },
+      ]);
+
+      await expect(
+        service.deleteProduct({ adminId: 'admin-1', id: 7 }),
+      ).rejects.toMatchObject({ extensions: { code: 'FORBIDDEN' } });
       expect(mockPrismaService.product.delete).not.toHaveBeenCalled();
     });
 

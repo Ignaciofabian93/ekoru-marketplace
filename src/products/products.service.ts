@@ -6,6 +6,7 @@ import {
   ForbiddenException,
 } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
+import { assertAdminCan } from '../common/admin-access';
 import { ImageProcessorClient } from './image-processor.client';
 import { Prisma } from '@prisma/client';
 import {
@@ -23,6 +24,22 @@ export class ProductsService {
     private readonly prisma: PrismaService,
     private readonly imageProcessor: ImageProcessorClient,
   ) {}
+
+  /**
+   * The listing's owner may act on it. Anyone else needs an admin token with
+   * MANAGE_PRODUCTS (MKT-1): a bare admin token, such as a BUSINESS admin's,
+   * no longer bypasses the ownership check.
+   */
+  private async assertOwnerOrProductAdmin(
+    ownerId: string,
+    sellerId: string | undefined,
+    adminId: string | undefined,
+    message: string,
+  ): Promise<void> {
+    if (sellerId && ownerId === sellerId) return;
+    if (!adminId) throw new ForbiddenException(message);
+    await assertAdminCan(this.prisma, adminId, 'MANAGE_PRODUCTS');
+  }
 
   /**
    * Get a single product by ID
@@ -478,8 +495,8 @@ export class ProductsService {
   }
 
   /**
-   * Update an existing product. The owning seller or a platform admin may
-   * update; admins bypass the ownership check.
+   * Update an existing product. The owning seller may update; anyone else
+   * must be a platform admin with MANAGE_PRODUCTS.
    */
   async updateProduct({
     input,
@@ -502,11 +519,12 @@ export class ProductsService {
       throw new NotFoundException(`Product with ID ${input.id} not found`);
     }
 
-    if (!adminId && product.sellerId !== sellerId) {
-      throw new ForbiddenException(
-        'You do not have permission to update this product',
-      );
-    }
+    await this.assertOwnerOrProductAdmin(
+      product.sellerId,
+      sellerId,
+      adminId,
+      'You do not have permission to update this product',
+    );
 
     const { id, ...data } = input;
     const updatedProduct = await this.prisma.product.update({
@@ -554,8 +572,8 @@ export class ProductsService {
   }
 
   /**
-   * Toggle product active status. The owning seller or a platform admin may
-   * toggle; admins bypass the ownership check.
+   * Toggle product active status. The owning seller may toggle; anyone else
+   * must be a platform admin with MANAGE_PRODUCTS.
    */
   async toggleProductActive({
     id,
@@ -578,11 +596,12 @@ export class ProductsService {
       throw new NotFoundException(`Product with ID ${id} not found`);
     }
 
-    if (!adminId && product.sellerId !== sellerId) {
-      throw new ForbiddenException(
-        'You do not have permission to modify this product',
-      );
-    }
+    await this.assertOwnerOrProductAdmin(
+      product.sellerId,
+      sellerId,
+      adminId,
+      'You do not have permission to modify this product',
+    );
 
     const updatedProduct = await this.prisma.product.update({
       where: { id },

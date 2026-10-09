@@ -1,11 +1,7 @@
-import {
-  BadRequestException,
-  Injectable,
-  Logger,
-  UnauthorizedException,
-} from '@nestjs/common';
+import { BadRequestException, Injectable, Logger } from '@nestjs/common';
 import { Prisma } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
+import { assertAdminCan } from '../common/admin-access';
 import {
   calculatePrismaParams,
   createPaginatedResponse,
@@ -61,7 +57,7 @@ export class AdminCatalogService {
     pageSize: number;
     search?: string;
   }) {
-    this.requireAdmin(adminId);
+    await this.requireAdmin(adminId);
     const { skip, take } = calculatePrismaParams(page, pageSize);
 
     const where: Prisma.DepartmentWhereInput = {
@@ -102,7 +98,7 @@ export class AdminCatalogService {
     search?: string;
     departmentId?: number;
   }) {
-    this.requireAdmin(adminId);
+    await this.requireAdmin(adminId);
     const { skip, take } = calculatePrismaParams(page, pageSize);
 
     const where: Prisma.DepartmentCategoryWhereInput = {
@@ -152,7 +148,12 @@ export class AdminCatalogService {
     search?: string;
     departmentCategoryId?: number;
   }) {
-    this.requireAdmin(adminId);
+    // The products screen reads this list for its category picker, so
+    // MANAGE_PRODUCTS is enough to read it (writes still need MANAGE_CATEGORIES).
+    await assertAdminCan(this.prisma, adminId, [
+      'MANAGE_CATEGORIES',
+      'MANAGE_PRODUCTS',
+    ]);
     const { skip, take } = calculatePrismaParams(page, pageSize);
 
     const where: Prisma.ProductCategoryWhereInput = {
@@ -205,7 +206,7 @@ export class AdminCatalogService {
     adminId?: string;
     rows: DepartmentUpsertRowInput[];
   }): Promise<BulkResult> {
-    this.requireAdmin(adminId);
+    await this.requireAdmin(adminId);
 
     return this.processRows(rows, async (row) => {
       const data = this.pickDefined({
@@ -232,7 +233,7 @@ export class AdminCatalogService {
     adminId?: string;
     rows: DepartmentTranslationUpsertRowInput[];
   }): Promise<BulkResult> {
-    this.requireAdmin(adminId);
+    await this.requireAdmin(adminId);
 
     return this.processRows(rows, async (row) => {
       const data = this.pickDefined({
@@ -298,7 +299,7 @@ export class AdminCatalogService {
     adminId?: string;
     rows: DepartmentCategoryUpsertRowInput[];
   }): Promise<BulkResult> {
-    this.requireAdmin(adminId);
+    await this.requireAdmin(adminId);
 
     return this.processRows(rows, async (row) => {
       const data = this.pickDefined({
@@ -337,7 +338,7 @@ export class AdminCatalogService {
     adminId?: string;
     rows: DepartmentCategoryTranslationUpsertRowInput[];
   }): Promise<BulkResult> {
-    this.requireAdmin(adminId);
+    await this.requireAdmin(adminId);
 
     return this.processRows(rows, async (row) => {
       const data = this.pickDefined({
@@ -406,7 +407,7 @@ export class AdminCatalogService {
     adminId?: string;
     rows: ProductCategoryUpsertRowInput[];
   }): Promise<BulkResult> {
-    this.requireAdmin(adminId);
+    await this.requireAdmin(adminId);
 
     return this.processRows(rows, async (row) => {
       const data = this.pickDefined({
@@ -448,7 +449,7 @@ export class AdminCatalogService {
     adminId?: string;
     rows: ProductCategoryTranslationUpsertRowInput[];
   }): Promise<BulkResult> {
-    this.requireAdmin(adminId);
+    await this.requireAdmin(adminId);
 
     return this.processRows(rows, async (row) => {
       const data = this.pickDefined({
@@ -518,7 +519,7 @@ export class AdminCatalogService {
     adminId?: string;
     rows: ProductCategoryMaterialUpsertRowInput[];
   }): Promise<BulkResult> {
-    this.requireAdmin(adminId);
+    await this.requireAdmin(adminId);
 
     return this.processRows(rows, async (row) => {
       const data = this.pickDefined({
@@ -578,7 +579,7 @@ export class AdminCatalogService {
   // ─── Deletes ────────────────────────────────────────────────────────────────
 
   async deleteDepartment({ adminId, id }: { adminId?: string; id: number }) {
-    this.requireAdmin(adminId);
+    await this.requireAdmin(adminId);
     try {
       // Translations cascade; categories restrict (delete them first).
       await this.prisma.department.delete({ where: { id } });
@@ -595,7 +596,7 @@ export class AdminCatalogService {
     adminId?: string;
     id: number;
   }) {
-    this.requireAdmin(adminId);
+    await this.requireAdmin(adminId);
     try {
       await this.prisma.departmentTranslation.delete({ where: { id } });
       return true;
@@ -611,7 +612,7 @@ export class AdminCatalogService {
     adminId?: string;
     id: number;
   }) {
-    this.requireAdmin(adminId);
+    await this.requireAdmin(adminId);
     try {
       // Own translations and product categories cascade, but a product category
       // that still has products restricts the whole delete.
@@ -629,7 +630,7 @@ export class AdminCatalogService {
     adminId?: string;
     id: number;
   }) {
-    this.requireAdmin(adminId);
+    await this.requireAdmin(adminId);
     try {
       await this.prisma.departmentCategoryTranslation.delete({
         where: { id },
@@ -647,7 +648,7 @@ export class AdminCatalogService {
     adminId?: string;
     id: number;
   }) {
-    this.requireAdmin(adminId);
+    await this.requireAdmin(adminId);
     try {
       // Translations and material links cascade; products restrict.
       await this.prisma.productCategory.delete({ where: { id } });
@@ -664,7 +665,7 @@ export class AdminCatalogService {
     adminId?: string;
     id: number;
   }) {
-    this.requireAdmin(adminId);
+    await this.requireAdmin(adminId);
     try {
       await this.prisma.productCategoryTranslation.delete({ where: { id } });
       return true;
@@ -680,7 +681,7 @@ export class AdminCatalogService {
     adminId?: string;
     id: number;
   }) {
-    this.requireAdmin(adminId);
+    await this.requireAdmin(adminId);
     try {
       await this.prisma.productCategoryMaterial.delete({ where: { id } });
       return true;
@@ -691,10 +692,9 @@ export class AdminCatalogService {
 
   // ─── Helpers ────────────────────────────────────────────────────────────────
 
-  private requireAdmin(adminId?: string): void {
-    if (!adminId) {
-      throw new UnauthorizedException('Admin authentication required');
-    }
+  /** Platform admin with MANAGE_CATEGORIES (matches the panel's nav for these screens). */
+  private requireAdmin(adminId?: string): Promise<string> {
+    return assertAdminCan(this.prisma, adminId, 'MANAGE_CATEGORIES');
   }
 
   /** Throws when any of the listed fields is missing on a create row. */

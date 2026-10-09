@@ -44,6 +44,7 @@ describe('ProductsService', () => {
   };
 
   const mockPrismaService = {
+    $queryRaw: jest.fn(),
     product: {
       findUnique: jest.fn(),
       findMany: jest.fn(),
@@ -436,6 +437,63 @@ describe('ProductsService', () => {
         service.updateProduct({ input, sellerId: 'wrong-seller' }),
       ).rejects.toThrow(ForbiddenException);
     });
+
+    it("should reject an admin without MANAGE_PRODUCTS on another seller's listing", async () => {
+      const input = { id: 1, name: 'Updated' };
+      mockPrismaService.product.findUnique.mockResolvedValue(mockProduct);
+      mockPrismaService.$queryRaw.mockResolvedValue([
+        {
+          adminType: 'BUSINESS',
+          role: 'ADMIN',
+          permissions: ['MANAGE_PRODUCTS'],
+          isActive: true,
+        },
+      ]);
+
+      await expect(
+        service.updateProduct({ input, adminId: 'admin-1' }),
+      ).rejects.toMatchObject({ extensions: { code: 'FORBIDDEN' } });
+      expect(mockPrismaService.product.update).not.toHaveBeenCalled();
+    });
+
+    it("should let a platform admin with MANAGE_PRODUCTS update another seller's listing", async () => {
+      const input = { id: 1, name: 'Updated' };
+      mockPrismaService.product.findUnique.mockResolvedValue(mockProduct);
+      mockPrismaService.product.update.mockResolvedValue({
+        ...mockProduct,
+        ...input,
+      });
+      mockPrismaService.$queryRaw.mockResolvedValue([
+        {
+          adminType: 'PLATFORM',
+          role: 'MODERATOR',
+          permissions: ['MANAGE_PRODUCTS'],
+          isActive: true,
+        },
+      ]);
+
+      const result = await service.updateProduct({ input, adminId: 'admin-1' });
+
+      expect(result.name).toBe('Updated');
+      expect(mockPrismaService.$queryRaw).toHaveBeenCalled();
+    });
+
+    it('should not look up the admin when the owner updates', async () => {
+      const input = { id: 1, name: 'Updated' };
+      mockPrismaService.product.findUnique.mockResolvedValue(mockProduct);
+      mockPrismaService.product.update.mockResolvedValue({
+        ...mockProduct,
+        ...input,
+      });
+
+      await service.updateProduct({
+        input,
+        sellerId: 'seller-123',
+        adminId: 'admin-1',
+      });
+
+      expect(mockPrismaService.$queryRaw).not.toHaveBeenCalled();
+    });
   });
 
   describe('deleteProduct', () => {
@@ -505,6 +563,23 @@ describe('ProductsService', () => {
       await expect(
         service.toggleProductActive({ id: 1, sellerId: 'wrong-seller' }),
       ).rejects.toThrow(ForbiddenException);
+    });
+
+    it('should reject an inactive admin toggling another seller listing', async () => {
+      mockPrismaService.product.findUnique.mockResolvedValue(mockProduct);
+      mockPrismaService.$queryRaw.mockResolvedValue([
+        {
+          adminType: 'PLATFORM',
+          role: 'SUPER_ADMIN',
+          permissions: [],
+          isActive: false,
+        },
+      ]);
+
+      await expect(
+        service.toggleProductActive({ id: 1, adminId: 'admin-1' }),
+      ).rejects.toMatchObject({ extensions: { code: 'FORBIDDEN' } });
+      expect(mockPrismaService.product.update).not.toHaveBeenCalled();
     });
   });
   describe('purgeSoldProducts', () => {

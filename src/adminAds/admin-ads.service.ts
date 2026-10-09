@@ -1,11 +1,7 @@
-import {
-  BadRequestException,
-  Injectable,
-  Logger,
-  UnauthorizedException,
-} from '@nestjs/common';
+import { BadRequestException, Injectable, Logger } from '@nestjs/common';
 import { Prisma } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
+import { assertAdminCan } from '../common/admin-access';
 import {
   calculatePrismaParams,
   createPaginatedResponse,
@@ -56,7 +52,7 @@ export class AdminAdsService {
     sellerId?: string;
     isActive?: boolean;
   }) {
-    this.requireAdmin(adminId);
+    await this.requireAdmin(adminId);
     const { skip, take } = calculatePrismaParams(page, pageSize);
 
     const where: Prisma.AdvertisementWhereInput = {
@@ -89,7 +85,7 @@ export class AdminAdsService {
     adminId?: string;
     rows: AdvertisementUpsertRowInput[];
   }): Promise<BulkResult> {
-    this.requireAdmin(adminId);
+    await this.requireAdmin(adminId);
 
     return this.processRows(rows, async (row) => {
       const data = this.pickDefined({
@@ -134,7 +130,7 @@ export class AdminAdsService {
   }
 
   async deleteAdvertisement({ adminId, id }: { adminId?: string; id: number }) {
-    this.requireAdmin(adminId);
+    await this.requireAdmin(adminId);
     try {
       await this.prisma.advertisement.delete({ where: { id } });
       return true;
@@ -145,10 +141,9 @@ export class AdminAdsService {
 
   // ─── Helpers ────────────────────────────────────────────────────────────────
 
-  private requireAdmin(adminId?: string): void {
-    if (!adminId) {
-      throw new UnauthorizedException('Admin authentication required');
-    }
+  /** Platform admin with MANAGE_SETTINGS (matches the panel's nav for these screens). */
+  private requireAdmin(adminId?: string): Promise<string> {
+    return assertAdminCan(this.prisma, adminId, 'MANAGE_SETTINGS');
   }
 
   private requireFields<T extends object>(row: T, fields: (keyof T)[]): void {

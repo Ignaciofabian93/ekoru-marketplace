@@ -1,11 +1,7 @@
-import {
-  BadRequestException,
-  Injectable,
-  Logger,
-  UnauthorizedException,
-} from '@nestjs/common';
+import { BadRequestException, Injectable, Logger } from '@nestjs/common';
 import { Prisma } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
+import { assertAdminCan } from '../common/admin-access';
 import {
   calculatePrismaParams,
   createPaginatedResponse,
@@ -60,7 +56,7 @@ export class AdminImpactService {
     pageSize: number;
     search?: string;
   }) {
-    this.requireAdmin(adminId);
+    await this.requireAdmin(adminId);
     const { skip, take } = calculatePrismaParams(page, pageSize);
 
     const where: Prisma.MaterialImpactEstimateWhereInput = {
@@ -97,7 +93,7 @@ export class AdminImpactService {
     pageSize: number;
     search?: string;
   }) {
-    this.requireAdmin(adminId);
+    await this.requireAdmin(adminId);
     const { skip, take } = calculatePrismaParams(page, pageSize);
 
     const where: Prisma.WaterImpactMessageWhereInput = {
@@ -134,7 +130,7 @@ export class AdminImpactService {
     pageSize: number;
     search?: string;
   }) {
-    this.requireAdmin(adminId);
+    await this.requireAdmin(adminId);
     const { skip, take } = calculatePrismaParams(page, pageSize);
 
     const where: Prisma.Co2ImpactMessageWhereInput = {
@@ -167,7 +163,7 @@ export class AdminImpactService {
     adminId?: string;
     rows: MaterialImpactEstimateUpsertRowInput[];
   }): Promise<BulkResult> {
-    this.requireAdmin(adminId);
+    await this.requireAdmin(adminId);
 
     return this.processRows(rows, async (row) => {
       const data = this.pickDefined({
@@ -207,7 +203,7 @@ export class AdminImpactService {
     adminId?: string;
     rows: MaterialImpactEstimateTranslationUpsertRowInput[];
   }): Promise<BulkResult> {
-    this.requireAdmin(adminId);
+    await this.requireAdmin(adminId);
 
     return this.processRows(rows, async (row) => {
       const data = this.pickDefined({
@@ -272,7 +268,7 @@ export class AdminImpactService {
     adminId?: string;
     rows: WaterImpactMessageUpsertRowInput[];
   }): Promise<BulkResult> {
-    this.requireAdmin(adminId);
+    await this.requireAdmin(adminId);
 
     return this.processRows(rows, async (row) => {
       const data = this.pickDefined({
@@ -311,7 +307,7 @@ export class AdminImpactService {
     adminId?: string;
     rows: WaterImpactMessageTranslationUpsertRowInput[];
   }): Promise<BulkResult> {
-    this.requireAdmin(adminId);
+    await this.requireAdmin(adminId);
 
     return this.processRows(rows, async (row) => {
       const data = this.pickDefined({
@@ -376,7 +372,7 @@ export class AdminImpactService {
     adminId?: string;
     rows: Co2ImpactMessageUpsertRowInput[];
   }): Promise<BulkResult> {
-    this.requireAdmin(adminId);
+    await this.requireAdmin(adminId);
 
     return this.processRows(rows, async (row) => {
       const data = this.pickDefined({
@@ -415,7 +411,7 @@ export class AdminImpactService {
     adminId?: string;
     rows: Co2ImpactMessageTranslationUpsertRowInput[];
   }): Promise<BulkResult> {
-    this.requireAdmin(adminId);
+    await this.requireAdmin(adminId);
 
     return this.processRows(rows, async (row) => {
       const data = this.pickDefined({
@@ -481,7 +477,7 @@ export class AdminImpactService {
     adminId?: string;
     id: number;
   }) {
-    this.requireAdmin(adminId);
+    await this.requireAdmin(adminId);
     try {
       // Translations cascade; product-category / store-product compositions
       // referencing this material restrict the delete.
@@ -499,7 +495,7 @@ export class AdminImpactService {
     adminId?: string;
     id: number;
   }) {
-    this.requireAdmin(adminId);
+    await this.requireAdmin(adminId);
     try {
       await this.prisma.materialImpactEstimateTranslation.delete({
         where: { id },
@@ -517,7 +513,7 @@ export class AdminImpactService {
     adminId?: string;
     id: number;
   }) {
-    this.requireAdmin(adminId);
+    await this.requireAdmin(adminId);
     try {
       await this.prisma.waterImpactMessage.delete({ where: { id } });
       return true;
@@ -533,7 +529,7 @@ export class AdminImpactService {
     adminId?: string;
     id: number;
   }) {
-    this.requireAdmin(adminId);
+    await this.requireAdmin(adminId);
     try {
       await this.prisma.waterImpactMessageTranslation.delete({ where: { id } });
       return true;
@@ -549,7 +545,7 @@ export class AdminImpactService {
     adminId?: string;
     id: number;
   }) {
-    this.requireAdmin(adminId);
+    await this.requireAdmin(adminId);
     try {
       await this.prisma.co2ImpactMessage.delete({ where: { id } });
       return true;
@@ -565,7 +561,7 @@ export class AdminImpactService {
     adminId?: string;
     id: number;
   }) {
-    this.requireAdmin(adminId);
+    await this.requireAdmin(adminId);
     try {
       await this.prisma.co2ImpactMessageTranslation.delete({ where: { id } });
       return true;
@@ -576,10 +572,9 @@ export class AdminImpactService {
 
   // ─── Helpers ────────────────────────────────────────────────────────────────
 
-  private requireAdmin(adminId?: string): void {
-    if (!adminId) {
-      throw new UnauthorizedException('Admin authentication required');
-    }
+  /** Platform admin with MANAGE_SETTINGS (matches the panel's nav for these screens). */
+  private requireAdmin(adminId?: string): Promise<string> {
+    return assertAdminCan(this.prisma, adminId, 'MANAGE_SETTINGS');
   }
 
   /** Throws when any of the listed fields is missing on a create row. */

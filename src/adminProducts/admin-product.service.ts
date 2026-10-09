@@ -1,11 +1,7 @@
-import {
-  BadRequestException,
-  Injectable,
-  Logger,
-  UnauthorizedException,
-} from '@nestjs/common';
+import { BadRequestException, Injectable, Logger } from '@nestjs/common';
 import { Prisma } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
+import { assertAdminCan } from '../common/admin-access';
 import {
   calculatePrismaParams,
   createPaginatedResponse,
@@ -57,7 +53,7 @@ export class AdminProductService {
     sellerId?: string;
     deleted?: boolean;
   }) {
-    this.requireAdmin(adminId);
+    await this.requireAdmin(adminId);
     const { skip, take } = calculatePrismaParams(page, pageSize);
 
     const where: Prisma.ProductWhereInput = {
@@ -92,7 +88,7 @@ export class AdminProductService {
     adminId?: string;
     rows: ProductUpsertRowInput[];
   }): Promise<BulkResult> {
-    this.requireAdmin(adminId);
+    await this.requireAdmin(adminId);
 
     return this.processRows(rows, async (row) => {
       const data = this.pickDefined({
@@ -143,7 +139,7 @@ export class AdminProductService {
   }
 
   async deleteProduct({ adminId, id }: { adminId?: string; id: number }) {
-    this.requireAdmin(adminId);
+    await this.requireAdmin(adminId);
     try {
       // Hard delete. Fails (P2003) while order items, exchanges or chats still
       // reference the product — the safe path for those is setting isActive
@@ -157,10 +153,9 @@ export class AdminProductService {
 
   // ─── Helpers ────────────────────────────────────────────────────────────────
 
-  private requireAdmin(adminId?: string): void {
-    if (!adminId) {
-      throw new UnauthorizedException('Admin authentication required');
-    }
+  /** Platform admin with MANAGE_PRODUCTS (matches the panel's nav for these screens). */
+  private requireAdmin(adminId?: string): Promise<string> {
+    return assertAdminCan(this.prisma, adminId, 'MANAGE_PRODUCTS');
   }
 
   private requireFields<T extends object>(row: T, fields: (keyof T)[]): void {
