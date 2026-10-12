@@ -6,6 +6,7 @@ import {
   Mutation,
   Query,
   Resolver,
+  Directive,
 } from '@nestjs/graphql';
 import { ImpactKind, Language } from '@prisma/client';
 
@@ -25,6 +26,8 @@ export class ImpactRecordsResolver {
    * Returns the number of records written. Idempotent, so a retry after a
    * partial failure is safe.
    */
+  // Internal: hidden from the public supergraph (GW-2); sibling services call it on this subgraph directly.
+  @Directive('@inaccessible')
   @Mutation(() => Int, { name: 'recordDealImpact' })
   async recordDealImpact(
     @Args('dealId', { type: () => Int }) dealId: number,

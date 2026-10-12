@@ -9,6 +9,7 @@ import {
   ResolveReference,
   Parent,
   Context,
+  Directive,
 } from '@nestjs/graphql';
 import { Logger } from '@nestjs/common';
 import { CurrentSeller, CurrentAdmin } from '../common/decorators';
@@ -54,6 +55,8 @@ export class ProductsResolver {
    * Internal: reserve/release/retire products for the P2P deal flow. Guarded by
    * INTERNAL_SERVICE_SECRET — only the transactions subgraph may call it.
    */
+  // Internal: hidden from the public supergraph (GW-2); sibling services call it on this subgraph directly.
+  @Directive('@inaccessible')
   @Mutation(() => Boolean, { name: 'setProductAvailability' })
   async setProductAvailability(
     @Args('ids', { type: () => [Int] }) ids: number[],
@@ -75,6 +78,8 @@ export class ProductsResolver {
    * Internal: soft-delete products sold more than `olderThanDays` ago. Called
    * by the transactions P2P sweep. Returns how many were purged.
    */
+  // Internal: hidden from the public supergraph (GW-2); sibling services call it on this subgraph directly.
+  @Directive('@inaccessible')
   @Mutation(() => Int, { name: 'purgeSoldProducts' })
   async purgeSoldProducts(
     @Args('olderThanDays', { type: () => Int }) olderThanDays: number,
