@@ -270,7 +270,6 @@ model Product {
   /// How it left: "SALE" | "EXCHANGE" — for the profile label. Null when unsold.
   soldVia              String?
   advertisement        Advertisement[]
-  chat                 Chat[]
   likes                MarketplaceProductLike[]
   productCategory      ProductCategory          @relation(fields: [productCategoryId], references: [id])
 
@@ -285,28 +284,6 @@ model Product {
   @@index([featuredUntil])
   @@index([reservedUntil])
   @@index([soldAt])
-}
-
-model Chat {
-  id                             Int       @id @default(autoincrement())
-  senderId                       String
-  receiverId                     String
-  productId                      Int?
-  isExchange                     Boolean   @default(false)
-  createdAt                      DateTime  @default(now())
-  updatedAt                      DateTime  @updatedAt
-  product                        Product?  @relation(fields: [productId], references: [id])
-  message                        Message[]
-}
-
-model Message {
-  id        Int      @id @default(autoincrement())
-  chatId    Int
-  senderId  String
-  content   String
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-  chat      Chat     @relation(fields: [chatId], references: [id])
 }
 
 model MaterialImpactEstimate {
