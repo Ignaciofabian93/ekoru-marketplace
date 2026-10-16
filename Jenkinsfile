@@ -75,8 +75,31 @@ pipeline {
       agent any
       when { branch 'main' }
       steps {
+        // Staging's env comes from Infisical (INF-14 pilot; production still reads
+        // /opt/ekoru/secrets). The CLI runs as a one-off container on the
+        // infisical-clients network, so nothing is installed in Jenkins.
+        withCredentials([
+          string(credentialsId: 'infisical-client-id', variable: 'INFISICAL_UNIVERSAL_AUTH_CLIENT_ID'),
+          string(credentialsId: 'infisical-client-secret', variable: 'INFISICAL_UNIVERSAL_AUTH_CLIENT_SECRET'),
+          string(credentialsId: 'infisical-project-id', variable: 'INFISICAL_PROJECT_ID')
+        ]) {
+          sh '''
+            set +x  # keeps the access token out of the build log
+            RUN="docker run --rm --network infisical-clients -e INFISICAL_DOMAIN=http://infisical:8080"
+            IMAGE=infisical/cli:0.44.1
+            INFISICAL_TOKEN=$($RUN -e INFISICAL_UNIVERSAL_AUTH_CLIENT_ID -e INFISICAL_UNIVERSAL_AUTH_CLIENT_SECRET \
+              $IMAGE login --method=universal-auth --silent --plain)
+            export INFISICAL_TOKEN
+            # --expand=false: values are written exactly as stored, so a "$" in a password stays.
+            $RUN -e INFISICAL_TOKEN -e INFISICAL_PROJECT_ID $IMAGE \
+              sm export --env=staging --path=/ekoru-marketplace --format=dotenv --expand=false --silent \
+              > "${WORKSPACE}/.env.staging"
+            # An empty or partial file would deploy a broken service, so stop here instead.
+            grep -q '^DATABASE_URL=' "${WORKSPACE}/.env.staging" \
+              || { echo "The Infisical export has no DATABASE_URL. Not deploying."; exit 1; }
+          '''
+        }
         sh '''
-          cp /opt/ekoru/secrets/ekoru-marketplace/.env.staging ${WORKSPACE}/.env.staging
           docker compose -f compose.staging.yml build --no-cache
           docker compose -f compose.staging.yml up -d --force-recreate
           docker image prune -f
