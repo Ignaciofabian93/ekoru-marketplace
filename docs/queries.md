@@ -618,7 +618,7 @@ Get paginated products with optional filtering and sorting.
 - `productCategoryId`: Int - Filter by product category
 - `departmentCategoryId`: Int - Filter by department category
 - `departmentId`: Int - Filter by department
-- `condition`: ProductCondition - Filter by condition (NEW, LIKE_NEW, GOOD, FAIR, POOR)
+- `condition`: ProductCondition - Filter by condition (NEW, OPEN_BOX, LIKE_NEW, GOOD, FAIR, POOR, FOR_PARTS, REFURBISHED)
 - `badges`: [Badge] - Filter by badges
 - `brand`: String - Filter by brand
 - `color`: String - Filter by color
@@ -1493,10 +1493,13 @@ useEffect(() => {
 ### ProductCondition
 
 - `NEW`
+- `OPEN_BOX`
 - `LIKE_NEW`
 - `GOOD`
 - `FAIR`
 - `POOR`
+- `FOR_PARTS`
+- `REFURBISHED`
 
 ### ProductSortField
 

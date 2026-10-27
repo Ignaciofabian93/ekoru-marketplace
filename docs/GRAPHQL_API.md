@@ -29,7 +29,7 @@ enum Badge {
   IN_HOUSE_PICKUP  IN_MID_POINT_PICKUP
 }
 
-enum ProductCondition { NEW  USED  REFURBISHED }
+enum ProductCondition { NEW  OPEN_BOX  LIKE_NEW  GOOD  FAIR  POOR  FOR_PARTS  REFURBISHED }
 
 enum ProductSize { XS  S  M  L  XL }
 
