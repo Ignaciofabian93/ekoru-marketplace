@@ -1,6 +1,7 @@
 import { BadRequestException, Injectable, Logger } from '@nestjs/common';
 import { Prisma } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
+import { assertMarketplaceSeller } from '../common/marketplace-seller';
 import { assertAdminCan } from '../common/admin-access';
 import {
   calculatePrismaParams,
@@ -109,6 +110,11 @@ export class AdminProductService {
         featuredFrom: row.featuredFrom,
         featuredUntil: row.featuredUntil,
       });
+
+      // A listing created for, or moved to, a business would break the
+      // person-only marketplace rule the seller side enforces.
+      if (row.sellerId)
+        await assertMarketplaceSeller(this.prisma, row.sellerId);
 
       if (row.id != null) {
         await this.prisma.product.update({ where: { id: row.id }, data });

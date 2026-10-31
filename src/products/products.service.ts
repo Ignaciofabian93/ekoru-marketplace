@@ -7,6 +7,7 @@ import {
 } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { assertAdminCan } from '../common/admin-access';
+import { assertMarketplaceSeller } from '../common/marketplace-seller';
 import { ImageProcessorClient } from './image-processor.client';
 import { Prisma } from '@prisma/client';
 import {
@@ -478,6 +479,7 @@ export class ProductsService {
     if (!sellerId) {
       throw new UnauthorizedException('Seller authentication required');
     }
+    await assertMarketplaceSeller(this.prisma, sellerId);
 
     const product = await this.prisma.product.create({
       data: {

@@ -18,6 +18,8 @@ describe('AdminProductService', () => {
     $queryRaw: jest.fn(),
     product: {
       delete: jest.fn(),
+      create: jest.fn(),
+      update: jest.fn(),
     },
   };
 
@@ -96,6 +98,47 @@ describe('AdminProductService', () => {
       await expect(
         service.deleteProduct({ adminId: 'admin-1', id: 7 }),
       ).rejects.toThrow(BadRequestException);
+    });
+  });
+
+  describe('bulkUpsertProducts', () => {
+    const row = {
+      name: 'Guitarra usada',
+      description: 'Bien cuidada',
+      brand: 'Marca',
+      price: 1000,
+      productCategoryId: 1,
+      sellerId: 'business-1',
+    };
+
+    it('refuses a listing for a business account, row by row', async () => {
+      mockPrismaService.$queryRaw
+        .mockResolvedValueOnce([productAdmin])
+        .mockResolvedValueOnce([{ sellerType: 'COMPANY' }]);
+
+      const result = await service.bulkUpsertProducts({
+        adminId: 'admin-1',
+        rows: [row],
+      });
+
+      expect(result.failed).toBe(1);
+      expect(result.errors[0].message).toMatch(/personal accounts/);
+      expect(mockPrismaService.product.create).not.toHaveBeenCalled();
+    });
+
+    it("creates a person's listing", async () => {
+      mockPrismaService.$queryRaw
+        .mockResolvedValueOnce([productAdmin])
+        .mockResolvedValueOnce([{ sellerType: 'PERSON' }]);
+      mockPrismaService.product.create.mockResolvedValue({ id: 9 });
+
+      const result = await service.bulkUpsertProducts({
+        adminId: 'admin-1',
+        rows: [{ ...row, sellerId: 'person-1' }],
+      });
+
+      expect(result.created).toBe(1);
+      expect(result.createdIds).toEqual([9]);
     });
   });
 });

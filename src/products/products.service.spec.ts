@@ -363,6 +363,7 @@ describe('ProductsService', () => {
         interests: [],
       };
 
+      mockPrismaService.$queryRaw.mockResolvedValue([{ sellerType: 'PERSON' }]);
       mockPrismaService.product.create.mockResolvedValue(mockProduct);
 
       const result = await service.addProduct({
@@ -395,6 +396,29 @@ describe('ProductsService', () => {
         service.addProduct({ input, sellerId: undefined }),
       ).rejects.toThrow(UnauthorizedException);
     });
+
+    it.each(['STARTUP', 'COMPANY'])(
+      'refuses a %s account: businesses sell from their store or as services',
+      async (sellerType) => {
+        mockPrismaService.$queryRaw.mockResolvedValue([{ sellerType }]);
+
+        await expect(
+          service.addProduct({
+            input: {
+              name: 'Guitarra',
+              description: 'Usada',
+              images: [],
+              brand: 'Marca',
+              price: 1000,
+              productCategoryId: 1,
+              condition: ProductCondition.GOOD,
+            },
+            sellerId: 'business-1',
+          }),
+        ).rejects.toMatchObject({ extensions: { code: 'FORBIDDEN' } });
+        expect(mockPrismaService.product.create).not.toHaveBeenCalled();
+      },
+    );
   });
 
   describe('updateProduct', () => {
