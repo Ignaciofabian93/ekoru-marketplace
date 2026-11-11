@@ -179,6 +179,49 @@ describe('ProductsService', () => {
       );
     });
 
+    it('should keep only sellers located in the given counties', async () => {
+      mockPrismaService.$queryRaw.mockResolvedValue([
+        { sellerId: 'near-1' },
+        { sellerId: 'near-2' },
+      ]);
+      mockPrismaService.product.findMany.mockResolvedValue([]);
+      mockPrismaService.product.count.mockResolvedValue(0);
+
+      await service.getProducts({
+        page: 1,
+        pageSize: 10,
+        filter: { countyIds: [10, 11] },
+        excludeSellerId: 'me',
+      });
+
+      expect(mockPrismaService.$queryRaw).toHaveBeenCalledTimes(1);
+      expect(prismaService.product.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: expect.objectContaining({
+            sellerId: { not: 'me', in: ['near-1', 'near-2'] },
+          }),
+        }),
+      );
+    });
+
+    it('should match nothing for an empty county list, without querying sellers', async () => {
+      mockPrismaService.product.findMany.mockResolvedValue([]);
+      mockPrismaService.product.count.mockResolvedValue(0);
+
+      await service.getProducts({
+        page: 1,
+        pageSize: 10,
+        filter: { countyIds: [] },
+      });
+
+      expect(mockPrismaService.$queryRaw).not.toHaveBeenCalled();
+      expect(prismaService.product.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: expect.objectContaining({ sellerId: { in: [] } }),
+        }),
+      );
+    });
+
     it('should apply a lone price bound', async () => {
       mockPrismaService.product.findMany.mockResolvedValue([]);
       mockPrismaService.product.count.mockResolvedValue(0);

@@ -173,7 +173,7 @@ export class ProductsService {
     excludeSellerId?: string;
   }) {
     const skip = (page - 1) * pageSize;
-    const where = this.buildWhereClause(filter, excludeSellerId);
+    const where = await this.listingWhere(filter, excludeSellerId);
     const orderBy = this.buildOrderBy(sort);
 
     const [products, totalCount] = await Promise.all([
@@ -255,7 +255,7 @@ export class ProductsService {
   }) {
     const skip = (page - 1) * pageSize;
     const where = {
-      ...this.buildWhereClause(filter, excludeSellerId),
+      ...(await this.listingWhere(filter, excludeSellerId)),
       productCategoryId,
     };
     const orderBy = this.buildOrderBy(sort);
@@ -315,7 +315,7 @@ export class ProductsService {
 
     const skip = (page - 1) * pageSize;
     const where = {
-      ...this.buildWhereClause(filter, excludeSellerId),
+      ...(await this.listingWhere(filter, excludeSellerId)),
       productCategoryId: {
         in: productCategoryIds,
       },
@@ -396,7 +396,7 @@ export class ProductsService {
 
     const skip = (page - 1) * pageSize;
     const where = {
-      ...this.buildWhereClause(filter, excludeSellerId),
+      ...(await this.listingWhere(filter, excludeSellerId)),
       productCategoryId: {
         in: productCategoryIds,
       },
@@ -437,7 +437,7 @@ export class ProductsService {
   }) {
     const skip = (page - 1) * pageSize;
     const where = {
-      ...this.buildWhereClause(filter, excludeSellerId),
+      ...(await this.listingWhere(filter, excludeSellerId)),
       isExchangeable: true,
     };
     const orderBy = this.buildOrderBy(sort);
@@ -778,6 +778,36 @@ export class ProductsService {
     };
   }
   /**
+   * Sellers whose primary address is in one of `countyIds` and who have a
+   * product on sale, for the `countyIds` filter. Seller belongs to ekoru-users,
+   * so it is read with raw SQL; joining Product keeps the list to sellers that
+   * can actually match.
+   */
+  private async sellersInCounties(countyIds: number[]): Promise<string[]> {
+    if (countyIds.length === 0) return [];
+    const rows = await this.prisma.$queryRaw<{ sellerId: string }[]>`
+      SELECT DISTINCT p."sellerId"
+        FROM "Product" p
+        JOIN "Seller" s ON s."id" = p."sellerId"
+       WHERE s."countyId" IN (${Prisma.join(countyIds)})
+         AND p."isActive" = true
+         AND p."deletedAt" IS NULL
+         AND p."soldAt" IS NULL`;
+    return rows.map((r) => r.sellerId);
+  }
+
+  /** `buildWhereClause` for the public listings, resolving `countyIds` first. */
+  private async listingWhere(
+    filter?: ProductFilterInput,
+    excludeSellerId?: string,
+  ): Promise<Prisma.ProductWhereInput> {
+    const nearSellerIds = filter?.countyIds
+      ? await this.sellersInCounties(filter.countyIds)
+      : undefined;
+    return this.buildWhereClause(filter, excludeSellerId, nearSellerIds);
+  }
+
+  /**
    * Build Prisma where clause from filter input.
    *
    * When `excludeSellerId` is provided (the authenticated caller), that seller's
@@ -787,6 +817,8 @@ export class ProductsService {
   private buildWhereClause(
     filter?: ProductFilterInput,
     excludeSellerId?: string,
+    /** Only these sellers (`sellersInCounties`); undefined means anyone. */
+    nearSellerIds?: string[],
   ): Prisma.ProductWhereInput {
     const where: Prisma.ProductWhereInput = {
       isActive: true,
@@ -800,8 +832,11 @@ export class ProductsService {
       OR: [{ reservedUntil: null }, { reservedUntil: { lte: new Date() } }],
     };
 
-    if (excludeSellerId) {
-      where.sellerId = { not: excludeSellerId };
+    if (excludeSellerId || nearSellerIds) {
+      where.sellerId = {
+        ...(excludeSellerId && { not: excludeSellerId }),
+        ...(nearSellerIds && { in: nearSellerIds }),
+      };
     }
 
     if (!filter) {

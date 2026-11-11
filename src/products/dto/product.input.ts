@@ -7,6 +7,7 @@ import {
   IsArray,
   IsEnum,
   IsIn,
+  ArrayMaxSize,
 } from 'class-validator';
 import { Badge, ProductCondition } from '@prisma/client';
 
@@ -53,6 +54,19 @@ export class ProductFilterInput {
   @IsOptional()
   @IsArray()
   badges?: Badge[];
+
+  @Field(() => [Int], {
+    nullable: true,
+    description:
+      "Only products whose seller's primary address is in one of these " +
+      'counties (ids from the users subgraph `countiesNear`). An empty list ' +
+      'matches nothing; omit it for no location filter.',
+  })
+  @IsOptional()
+  @IsArray()
+  @ArrayMaxSize(500)
+  @IsInt({ each: true })
+  countyIds?: number[];
 }
 
 /**
