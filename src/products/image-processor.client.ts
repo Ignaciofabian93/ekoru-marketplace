@@ -1,3 +1,4 @@
+import { fetchWithTimeout } from '../common/fetch-with-timeout';
 import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 
@@ -37,7 +38,7 @@ export class ImageProcessorClient {
 
     const encoded = key.split('/').map(encodeURIComponent).join('/');
     try {
-      const res = await fetch(`${this.baseUrl}/objects/${encoded}`, {
+      const res = await fetchWithTimeout(`${this.baseUrl}/objects/${encoded}`, {
         method: 'DELETE',
         headers: { 'X-Internal-Token': this.token! },
       });
