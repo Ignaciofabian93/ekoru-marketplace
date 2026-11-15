@@ -1,9 +1,5 @@
-import {
-  BadRequestException,
-  Injectable,
-  Logger,
-  NotFoundException,
-} from '@nestjs/common';
+import { BadRequestException, Injectable, Logger } from '@nestjs/common';
+import { NotFoundError } from '../common/exceptions';
 import { Language } from '../graphql/enums';
 import { DepartmentCategoryRepository } from './department-category.repository';
 import { I18nDepartmentCategoryService } from './i18n';
@@ -75,7 +71,7 @@ export class DepartmentCategoryService {
   /**
    * Gets a department category by its ID (admin panel)
    *
-   * @throws {NotFoundException} If department category is not found
+   * @throws {NotFoundError} If department category is not found
    */
   async getDepartmentCategoryById({
     id,
@@ -88,7 +84,7 @@ export class DepartmentCategoryService {
     const category = await this.departmentCategoryRepository.findById(id);
 
     if (!category) {
-      throw new NotFoundException(
+      throw new NotFoundError(
         this.i18nService.translate('errors.category_not_found_id', language, {
           id: String(id),
         }),
@@ -101,7 +97,7 @@ export class DepartmentCategoryService {
   /**
    * Gets a department category by its slug (web browsing)
    *
-   * @throws {NotFoundException} If department category is not found
+   * @throws {NotFoundError} If department category is not found
    *
    * @example
    * const category = await getDepartmentCategoryBySlug({ slug: 'television', language: Language.ES });
@@ -120,7 +116,7 @@ export class DepartmentCategoryService {
     );
 
     if (!category) {
-      throw new NotFoundException(
+      throw new NotFoundError(
         this.i18nService.translate('errors.category_not_found', language, {
           slug,
         }),

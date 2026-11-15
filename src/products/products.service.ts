@@ -1,10 +1,10 @@
 import {
   Injectable,
   Logger,
-  NotFoundException,
   UnauthorizedException,
   ForbiddenException,
 } from '@nestjs/common';
+import { NotFoundError } from '../common/exceptions';
 import { PrismaService } from '../prisma/prisma.service';
 import { assertAdminCan } from '../common/admin-access';
 import { assertMarketplaceSeller } from '../common/marketplace-seller';
@@ -515,7 +515,7 @@ export class ProductsService {
     });
 
     if (!product) {
-      throw new NotFoundException(`Product with ID ${input.id} not found`);
+      throw new NotFoundError(`Product with ID ${input.id} not found`);
     }
 
     await this.assertOwnerOrProductAdmin(
@@ -562,7 +562,7 @@ export class ProductsService {
     });
 
     if (!product || product.deletedAt) {
-      throw new NotFoundException(`Product with ID ${id} not found`);
+      throw new NotFoundError(`Product with ID ${id} not found`);
     }
 
     if (product.sellerId !== sellerId) {
@@ -601,7 +601,7 @@ export class ProductsService {
     });
 
     if (!product) {
-      throw new NotFoundException(`Product with ID ${id} not found`);
+      throw new NotFoundError(`Product with ID ${id} not found`);
     }
 
     await this.assertOwnerOrProductAdmin(
@@ -648,7 +648,7 @@ export class ProductsService {
     });
 
     if (!product || product.deletedAt) {
-      throw new NotFoundException(`Product with ID ${productId} not found`);
+      throw new NotFoundError(`Product with ID ${productId} not found`);
     }
 
     // Toggle the like row and keep the denormalized `likesCount` counter in

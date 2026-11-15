@@ -1,9 +1,5 @@
-import {
-  BadRequestException,
-  Injectable,
-  Logger,
-  NotFoundException,
-} from '@nestjs/common';
+import { BadRequestException, Injectable, Logger } from '@nestjs/common';
+import { NotFoundError } from '../common/exceptions';
 import { Language } from '../graphql/enums';
 import { ProductCategoryRepository } from './product-category.repository';
 import { I18nProductCategoryService } from './i18n';
@@ -75,7 +71,7 @@ export class ProductCategoryService {
   /**
    * Gets a product category by its ID (admin panel)
    *
-   * @throws {NotFoundException} If product category is not found
+   * @throws {NotFoundError} If product category is not found
    */
   async getProductCategoryById({
     id,
@@ -88,7 +84,7 @@ export class ProductCategoryService {
     const productCategory = await this.productCategoryRepository.findById(id);
 
     if (!productCategory) {
-      throw new NotFoundException(
+      throw new NotFoundError(
         this.i18nService.translate(
           'errors.product_category_not_found_id',
           language,
@@ -103,7 +99,7 @@ export class ProductCategoryService {
   /**
    * Gets a product category by its slug (web browsing)
    *
-   * @throws {NotFoundException} If product category is not found
+   * @throws {NotFoundError} If product category is not found
    *
    * @example
    * const productCategory = await getProductCategoryBySlug({ slug: 'led-grande', language: Language.ES });
@@ -122,7 +118,7 @@ export class ProductCategoryService {
     );
 
     if (!productCategory) {
-      throw new NotFoundException(
+      throw new NotFoundError(
         this.i18nService.translate(
           'errors.product_category_not_found',
           language,

@@ -2,11 +2,8 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { ProductsService } from './products.service';
 import { PrismaService } from '../prisma/prisma.service';
 import { ImageProcessorClient } from './image-processor.client';
-import {
-  NotFoundException,
-  UnauthorizedException,
-  ForbiddenException,
-} from '@nestjs/common';
+import { UnauthorizedException, ForbiddenException } from '@nestjs/common';
+import { NotFoundError } from '../common/exceptions';
 import { Badge, ProductCondition } from '@prisma/client';
 
 describe('ProductsService', () => {
@@ -485,13 +482,13 @@ describe('ProductsService', () => {
       expect(prismaService.product.update).toHaveBeenCalled();
     });
 
-    it('should throw NotFoundException when product not found', async () => {
+    it('should answer NOT_FOUND when product not found', async () => {
       const input = { id: 999, name: 'Updated' };
       mockPrismaService.product.findUnique.mockResolvedValue(null);
 
       await expect(
         service.updateProduct({ input, sellerId: 'seller-123' }),
-      ).rejects.toThrow(NotFoundException);
+      ).rejects.toThrow(NotFoundError);
     });
 
     it('should throw ForbiddenException when seller does not own product', async () => {
@@ -586,18 +583,20 @@ describe('ProductsService', () => {
         deletedAt: new Date(),
       });
 
+      // NOT_FOUND, not Nest's NotFoundException: the Apollo driver turns a
+      // 404 into INTERNAL_SERVER_ERROR, which the gateway hides and alerts on.
       await expect(
         service.deleteProduct({ id: 1, sellerId: 'seller-123' }),
-      ).rejects.toThrow(NotFoundException);
+      ).rejects.toMatchObject({ extensions: { code: 'NOT_FOUND' } });
       expect(mockPrismaService.product.update).not.toHaveBeenCalled();
     });
 
-    it('should throw NotFoundException when product not found', async () => {
+    it('should answer NOT_FOUND when product not found', async () => {
       mockPrismaService.product.findUnique.mockResolvedValue(null);
 
       await expect(
         service.deleteProduct({ id: 999, sellerId: 'seller-123' }),
-      ).rejects.toThrow(NotFoundException);
+      ).rejects.toThrow(NotFoundError);
       expect(mockPrismaService.product.update).not.toHaveBeenCalled();
     });
 

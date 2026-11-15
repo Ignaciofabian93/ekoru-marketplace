@@ -1,9 +1,5 @@
-import {
-  BadRequestException,
-  Injectable,
-  Logger,
-  NotFoundException,
-} from '@nestjs/common';
+import { BadRequestException, Injectable, Logger } from '@nestjs/common';
+import { NotFoundError } from '../common/exceptions';
 import { Language } from '../graphql/enums';
 import { DepartmentRepository } from './department.repository';
 import { I18nDepartmentService } from './i18n';
@@ -82,7 +78,7 @@ export class DepartmentService {
   /**
    * Gets a department by its ID (admin panel)
    *
-   * @throws {NotFoundException} If department is not found
+   * @throws {NotFoundError} If department is not found
    */
   async getDepartmentById({
     id,
@@ -93,7 +89,7 @@ export class DepartmentService {
     const department = await this.departmentRepository.findById(id);
 
     if (!department) {
-      throw new NotFoundException(
+      throw new NotFoundError(
         this.i18nService.translate('errors.department_not_found_id', language, {
           id: String(id),
         }),
@@ -106,7 +102,7 @@ export class DepartmentService {
   /**
    * Gets a department by its slug (web browsing)
    *
-   * @throws {NotFoundException} If department is not found
+   * @throws {NotFoundError} If department is not found
    *
    * @example
    * const dept = await getDepartmentBySlug({ slug: 'technology', language: Language.EN });
@@ -125,7 +121,7 @@ export class DepartmentService {
     );
 
     if (!department) {
-      throw new NotFoundException(
+      throw new NotFoundError(
         this.i18nService.translate('errors.department_not_found', language, {
           slug,
         }),
