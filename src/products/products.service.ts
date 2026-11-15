@@ -43,10 +43,13 @@ export class ProductsService {
   }
 
   /**
-   * Get a single product by ID
+   * A single product by ID, or null when the row doesn't exist. Soft-deleted
+   * rows are returned: deals, orders and chats keep pointing at them, and the
+   * federation reference resolver must not fail a whole list over one missing
+   * row (MKT-3).
    */
-  async getProductById(id: number) {
-    const product = await this.prisma.product.findUnique({
+  async findProductById(id: number) {
+    return this.prisma.product.findUnique({
       where: { id },
       include: {
         productCategory: {
@@ -66,12 +69,6 @@ export class ProductsService {
         },
       },
     });
-
-    if (!product) {
-      throw new NotFoundException(`Product with ID ${id} not found`);
-    }
-
-    return product;
   }
 
   /**
@@ -544,8 +541,16 @@ export class ProductsService {
   }
 
   /**
-   * Hard-delete a product owned by the calling seller. Returns the deleted id
-   * as feedback. Admins delete through `deleteProductByAdmin` instead.
+   * Delete a product owned by the calling seller. Returns its id as feedback.
+   * Admins delete through `deleteProductByAdmin` instead.
+   *
+   * A soft delete (`deletedAt`, `isActive: false`), never a row delete (MKT-3):
+   * P2P deals name their products in plain columns with no foreign key, so a
+   * row delete left deals pointing at nothing and emptied both people's
+   * Mis tratos. Orders and chats do have foreign keys, so a row delete failed
+   * for those with a raw database error. Every list, the search index and the
+   * public product page already leave soft-deleted rows out; deals, orders and
+   * chats still show the product they were about.
    */
   async deleteProduct({ id, sellerId }: { id: number; sellerId?: string }) {
     if (!sellerId) {
@@ -556,7 +561,7 @@ export class ProductsService {
       where: { id },
     });
 
-    if (!product) {
+    if (!product || product.deletedAt) {
       throw new NotFoundException(`Product with ID ${id} not found`);
     }
 
@@ -566,11 +571,12 @@ export class ProductsService {
       );
     }
 
-    const deletedProduct = await this.prisma.product.delete({
+    await this.prisma.product.update({
       where: { id },
+      data: { deletedAt: new Date(), isActive: false },
     });
 
-    return deletedProduct.id;
+    return id;
   }
 
   /**

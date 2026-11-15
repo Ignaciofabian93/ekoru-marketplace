@@ -36,9 +36,14 @@ export class ProductsResolver {
     private readonly impactService: ImpactService,
   ) {}
 
+  /**
+   * The public product page. A missing or deleted listing answers null, which
+   * the web and the app show as "Producto no encontrado".
+   */
   @Query(() => ProductEntity, { nullable: true, name: 'getProductById' })
   async getProductById(@Args('id', { type: () => ID }) id: string) {
-    return this.productsService.getProductById(Number(id));
+    const product = await this.productsService.findProductById(Number(id));
+    return product && !product.deletedAt ? product : null;
   }
 
   /**
@@ -275,8 +280,8 @@ export class ProductsResolver {
   @Mutation(() => Int, {
     name: 'deleteProduct',
     description:
-      'Hard-deletes a marketplace product and returns its id. ' +
-      'Fails while order items, exchanges or chats reference it.',
+      "Deletes the caller's marketplace product and returns its id. The row " +
+      'is kept (soft delete) so deals, orders and chats still show it.',
   })
   async deleteProduct(
     @Args('id', { type: () => Int }) id: number,
@@ -332,10 +337,14 @@ export class ProductsResolver {
    * Federation entity resolver: hydrates a Product that another subgraph
    * referenced by key alone (e.g. a hit from ekoru-search). Without it the
    * gateway can only hand back the id and every other field resolves to null.
+   *
+   * A row that doesn't exist resolves to null, not an error (MKT-3): one
+   * missing product used to fail a whole list, such as a person's deals, and
+   * the apps then showed nothing. Soft-deleted rows still resolve.
    */
   @ResolveReference()
   async resolveReference(reference: { __typename: string; id: number }) {
-    return this.productsService.getProductById(Number(reference.id));
+    return this.productsService.findProductById(Number(reference.id));
   }
 
   // Field resolvers

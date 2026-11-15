@@ -91,11 +91,11 @@ describe('ProductsService', () => {
     jest.clearAllMocks();
   });
 
-  describe('getProductById', () => {
+  describe('findProductById', () => {
     it('should return a product by id', async () => {
       mockPrismaService.product.findUnique.mockResolvedValue(mockProduct);
 
-      const result = await service.getProductById(1);
+      const result = await service.findProductById(1);
 
       expect(result).toEqual(mockProduct);
       expect(prismaService.product.findUnique).toHaveBeenCalledWith({
@@ -120,12 +120,10 @@ describe('ProductsService', () => {
       });
     });
 
-    it('should throw NotFoundException when product not found', async () => {
+    it('should return null, not throw, when the row is gone (MKT-3)', async () => {
       mockPrismaService.product.findUnique.mockResolvedValue(null);
 
-      await expect(service.getProductById(999)).rejects.toThrow(
-        NotFoundException,
-      );
+      await expect(service.findProductById(999)).resolves.toBeNull();
     });
   });
 
@@ -564,9 +562,9 @@ describe('ProductsService', () => {
   });
 
   describe('deleteProduct', () => {
-    it('should hard delete a product and return its id', async () => {
+    it('should soft delete a product, keeping its row, and return its id (MKT-3)', async () => {
       mockPrismaService.product.findUnique.mockResolvedValue(mockProduct);
-      mockPrismaService.product.delete.mockResolvedValue(mockProduct);
+      mockPrismaService.product.update.mockResolvedValue(mockProduct);
 
       const result = await service.deleteProduct({
         id: 1,
@@ -574,9 +572,23 @@ describe('ProductsService', () => {
       });
 
       expect(result).toBe(1);
-      expect(mockPrismaService.product.delete).toHaveBeenCalledWith({
+      expect(mockPrismaService.product.update).toHaveBeenCalledWith({
         where: { id: 1 },
+        data: { deletedAt: expect.any(Date), isActive: false },
       });
+      // A row delete left P2P deals pointing at nothing.
+      expect(mockPrismaService.product.delete).not.toHaveBeenCalled();
+    });
+
+    it('should answer NotFound for a product already deleted', async () => {
+      mockPrismaService.product.findUnique.mockResolvedValue({
+        ...mockProduct,
+        deletedAt: new Date(),
+      });
+
+      await expect(
+        service.deleteProduct({ id: 1, sellerId: 'seller-123' }),
+      ).rejects.toThrow(NotFoundException);
       expect(mockPrismaService.product.update).not.toHaveBeenCalled();
     });
 
@@ -586,7 +598,7 @@ describe('ProductsService', () => {
       await expect(
         service.deleteProduct({ id: 999, sellerId: 'seller-123' }),
       ).rejects.toThrow(NotFoundException);
-      expect(mockPrismaService.product.delete).not.toHaveBeenCalled();
+      expect(mockPrismaService.product.update).not.toHaveBeenCalled();
     });
 
     it('should throw UnauthorizedException without a seller', async () => {
@@ -604,7 +616,7 @@ describe('ProductsService', () => {
       await expect(
         service.deleteProduct({ id: 1, sellerId: 'wrong-seller' }),
       ).rejects.toThrow(ForbiddenException);
-      expect(mockPrismaService.product.delete).not.toHaveBeenCalled();
+      expect(mockPrismaService.product.update).not.toHaveBeenCalled();
     });
   });
 

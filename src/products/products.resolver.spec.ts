@@ -39,7 +39,7 @@ describe('ProductsResolver', () => {
   };
 
   const mockProductsService = {
-    getProductById: jest.fn(),
+    findProductById: jest.fn(),
     getProducts: jest.fn(),
     getProductsBySeller: jest.fn(),
     getProductsByCategory: jest.fn(),
@@ -82,12 +82,46 @@ describe('ProductsResolver', () => {
 
   describe('getProductById', () => {
     it('should return a product by id', async () => {
-      mockProductsService.getProductById.mockResolvedValue(mockProduct);
+      mockProductsService.findProductById.mockResolvedValue(mockProduct);
 
       const result = await resolver.getProductById('1');
 
       expect(result).toEqual(mockProduct);
-      expect(productsService.getProductById).toHaveBeenCalledWith(1);
+      expect(productsService.findProductById).toHaveBeenCalledWith(1);
+    });
+
+    it('should answer null for a deleted listing', async () => {
+      mockProductsService.findProductById.mockResolvedValue({
+        ...mockProduct,
+        deletedAt: new Date(),
+      });
+
+      await expect(resolver.getProductById('1')).resolves.toBeNull();
+    });
+
+    it('should answer null for a missing listing', async () => {
+      mockProductsService.findProductById.mockResolvedValue(null);
+
+      await expect(resolver.getProductById('1')).resolves.toBeNull();
+    });
+  });
+
+  describe('resolveReference (MKT-3)', () => {
+    it('should resolve a missing product to null instead of failing the list', async () => {
+      mockProductsService.findProductById.mockResolvedValue(null);
+
+      await expect(
+        resolver.resolveReference({ __typename: 'Product', id: 3 }),
+      ).resolves.toBeNull();
+    });
+
+    it('should still resolve a soft-deleted product, so a deal keeps its item', async () => {
+      const deleted = { ...mockProduct, deletedAt: new Date() };
+      mockProductsService.findProductById.mockResolvedValue(deleted);
+
+      await expect(
+        resolver.resolveReference({ __typename: 'Product', id: 1 }),
+      ).resolves.toEqual(deleted);
     });
   });
 
